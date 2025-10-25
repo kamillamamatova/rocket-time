@@ -7,7 +7,7 @@ import auth from './rocketTime/apps/server/src/routes/auth.js';
 import agent from './rocketTime/apps/server/src/routes/chatRoute.js';
 import calendar from './rocketTime/apps/server/src/routes/taskRoutes.js';
 
-import {query} from './rocketTime/apps/server/src/services/db.js';
+import {query} from './rocketTime/apps/server/src/config/sql.js';
 import getLogRouter from './rocketTime/apps/server/src/routes/getLogRoute.js';
 
 const app = express();
