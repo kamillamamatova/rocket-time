@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { AlertTriangle, TrendingDown } from "lucide-react";
+import { AlertTriangle, TrendingDown, TrendingUp, Target } from "lucide-react";
 
 interface TimeEntry {
   id: string;
@@ -11,8 +11,18 @@ interface TimeEntry {
   goalId?: string;
 }
 
+interface Goal {
+  id: string;
+  name: string;
+  targetHours: number;
+  currentHours: number;
+  category: "productive" | "learning" | "exercise";
+  deadline?: string;
+}
+
 interface HabitSubscriptionProps {
   timeEntries: TimeEntry[];
+  goals: Goal[];
 }
 
 interface BadHabit {
@@ -22,7 +32,53 @@ interface BadHabit {
   severity: "high" | "medium" | "low";
 }
 
-export function HabitSubscription({ timeEntries }: HabitSubscriptionProps) {
+interface GoalStatus {
+  goal: Goal;
+  status: "on-track" | "behind" | "overdue" | "completed";
+  progressPercentage: number;
+}
+
+export function HabitSubscription({ timeEntries, goals }: HabitSubscriptionProps) {
+  // Analyze goal progress
+  const analyzeGoalProgress = (): GoalStatus[] => {
+    const now = new Date();
+    
+    return goals.map(goal => {
+      const progressPercentage = (goal.currentHours / goal.targetHours) * 100;
+      
+      let status: GoalStatus['status'];
+      
+      if (progressPercentage >= 100) {
+        status = "completed";
+      } else if (goal.deadline) {
+        const deadline = new Date(goal.deadline);
+        if (deadline < now) {
+          status = "overdue";
+        } else {
+          // Calculate expected progress based on time elapsed
+          const totalTimeToDeadline = deadline.getTime() - now.getTime();
+          const daysUntilDeadline = totalTimeToDeadline / (1000 * 60 * 60 * 24);
+          
+          // If more than 50% behind schedule, mark as behind
+          if (daysUntilDeadline < 7 && progressPercentage < 70) {
+            status = "behind";
+          } else {
+            status = "on-track";
+          }
+        }
+      } else {
+        // No deadline, just check if making progress
+        status = progressPercentage > 0 ? "on-track" : "behind";
+      }
+      
+      return {
+        goal,
+        status,
+        progressPercentage,
+      };
+    });
+  };
+  
   // Analyze bad habits from time entries
   const detectBadHabits = (): BadHabit[] => {
     const habits: BadHabit[] = [];
@@ -92,6 +148,7 @@ export function HabitSubscription({ timeEntries }: HabitSubscriptionProps) {
   };
 
   const badHabits = detectBadHabits();
+  const goalStatuses = analyzeGoalProgress();
   
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -105,6 +162,36 @@ export function HabitSubscription({ timeEntries }: HabitSubscriptionProps) {
         return "bg-gray-100 text-gray-800 border-gray-300";
     }
   };
+  
+  const getStatusColor = (status: GoalStatus['status']) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-800 border-green-300";
+      case "on-track":
+        return "bg-blue-100 text-blue-800 border-blue-300";
+      case "behind":
+        return "bg-orange-100 text-orange-800 border-orange-300";
+      case "overdue":
+        return "bg-red-100 text-red-800 border-red-300";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-300";
+    }
+  };
+  
+  const getStatusIcon = (status: GoalStatus['status']) => {
+    switch (status) {
+      case "completed":
+        return <TrendingUp className="h-5 w-5 text-green-500 mt-0.5 shrink-0" />;
+      case "on-track":
+        return <Target className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />;
+      case "behind":
+        return <TrendingDown className="h-5 w-5 text-orange-500 mt-0.5 shrink-0" />;
+      case "overdue":
+        return <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />;
+      default:
+        return <Target className="h-5 w-5 text-gray-500 mt-0.5 shrink-0" />;
+    }
+  };
 
   return (
     <Card>
@@ -114,49 +201,105 @@ export function HabitSubscription({ timeEntries }: HabitSubscriptionProps) {
           Habit Subscription
         </CardTitle>
         <CardDescription>
-          AI-detected patterns that may need your attention
+          AI-detected patterns and goal progress tracking
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        {badHabits.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="mb-3 text-4xl">🎉</div>
-            <p className="text-sm text-muted-foreground">
-              Great job! No concerning habits detected this week.
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Keep up the excellent time management!
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {badHabits.map((habit, index) => (
-              <div
-                key={index}
-                className="p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex items-start gap-3">
-                  <TrendingDown className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <span className="font-medium">{habit.type}</span>
-                      <Badge
-                        variant="outline"
-                        className={getSeverityColor(habit.severity)}
-                      >
-                        {habit.severity}
-                      </Badge>
+      <CardContent className="space-y-4">
+        {/* Goal Progress Section */}
+        {goalStatuses.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2">Goal Progress</h4>
+            <div className="space-y-2">
+              {goalStatuses.map((goalStatus, index) => (
+                <div
+                  key={index}
+                  className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    {getStatusIcon(goalStatus.status)}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-medium">{goalStatus.goal.name}</span>
+                        <Badge
+                          variant="outline"
+                          className={getStatusColor(goalStatus.status)}
+                        >
+                          {goalStatus.status === "on-track" ? "On Track" : 
+                           goalStatus.status === "behind" ? "Behind" :
+                           goalStatus.status === "overdue" ? "Overdue" : "Completed"}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {goalStatus.goal.currentHours.toFixed(1)}h / {goalStatus.goal.targetHours}h 
+                        ({goalStatus.progressPercentage.toFixed(0)}%)
+                      </p>
+                      {goalStatus.goal.deadline && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Deadline: {new Date(goalStatus.goal.deadline).toLocaleDateString()}
+                        </p>
+                      )}
                     </div>
-                    <p className="text-sm text-muted-foreground mb-1">
-                      {habit.description}
-                    </p>
-                    <p className="text-xs text-muted-foreground italic">
-                      💡 {habit.impact}
-                    </p>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Bad Habits Section */}
+        {badHabits.length > 0 && (
+          <div>
+            <h4 className="text-sm font-semibold mb-2">Detected Patterns</h4>
+            <div className="space-y-2">
+              {badHabits.map((habit, index) => (
+                <div
+                  key={index}
+                  className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-start gap-3">
+                    <TrendingDown className="h-5 w-5 text-red-500 mt-0.5 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-medium">{habit.type}</span>
+                        <Badge
+                          variant="outline"
+                          className={getSeverityColor(habit.severity)}
+                        >
+                          {habit.severity}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        {habit.description}
+                      </p>
+                      <p className="text-xs text-muted-foreground italic">
+                        💡 {habit.impact}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Empty State */}
+        {badHabits.length === 0 && goalStatuses.length === 0 && (
+          <div className="text-center py-8">
+            <div className="mb-3 text-4xl">🎯</div>
+            <p className="text-sm text-muted-foreground">
+              No goals or patterns to track yet.
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Create some goals to get started!
+            </p>
+          </div>
+        )}
+        
+        {badHabits.length === 0 && goalStatuses.length > 0 && (
+          <div className="text-center py-4 border-t">
+            <p className="text-sm text-muted-foreground">
+              ✨ No concerning habits detected this week!
+            </p>
           </div>
         )}
       </CardContent>

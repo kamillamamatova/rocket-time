@@ -14,7 +14,7 @@ export interface Goal {
   name: string;
   targetHours: number;
   currentHours: number;
-  category: "Productive" | "Entertainment" | "Wasted";
+  category: "productive" | "learning" | "exercise";
   deadline?: string;
 }
 
@@ -27,7 +27,7 @@ interface GoalManagerProps {
 export function GoalManager({ goals, onAddGoal, onDeleteGoal }: GoalManagerProps) {
   const [goalName, setGoalName] = useState("");
   const [targetHours, setTargetHours] = useState("");
-  const [category, setCategory] = useState<"Productive" | "Entertainment" | "Wasted">("Productive");
+  const [category, setCategory] = useState<"productive" | "learning" | "exercise">("productive");
   const [deadline, setDeadline] = useState("");
   const [showForm, setShowForm] = useState(false);
 
@@ -55,7 +55,7 @@ export function GoalManager({ goals, onAddGoal, onDeleteGoal }: GoalManagerProps
     toast.success(`Goal "${goalName}" created!`);
     setGoalName("");
     setTargetHours("");
-    setCategory("Productive");
+    setCategory("productive");
     setDeadline("");
     setShowForm(false);
   };
@@ -96,14 +96,14 @@ export function GoalManager({ goals, onAddGoal, onDeleteGoal }: GoalManagerProps
             </div>
             <div className="space-y-2">
               <Label htmlFor="goal-category">Category</Label>
-              <Select value={category} onValueChange={(value: "Productive" | "Entertainment" | "Wasted") => setCategory(value)}>
+              <Select value={category} onValueChange={(value: "productive" | "learning" | "exercise") => setCategory(value)}>
                 <SelectTrigger id="goal-category">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Productive">Productive</SelectItem>
-                  <SelectItem value="Entertainment">Entertainment</SelectItem>
-                  <SelectItem value="Wasted">Wasted</SelectItem>
+                  <SelectItem value="productive">✅ Productive</SelectItem>
+                  <SelectItem value="learning">📚 Learning</SelectItem>
+                  <SelectItem value="exercise">💪 Exercise</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -159,10 +159,19 @@ export function GoalManager({ goals, onAddGoal, onDeleteGoal }: GoalManagerProps
               
               const getCategoryColor = (cat: string) => {
                 switch (cat) {
-                  case "Productive": return "bg-green-100 text-green-800 border-green-300";
-                  case "Entertainment": return "bg-blue-100 text-blue-800 border-blue-300";
-                  case "Wasted": return "bg-red-100 text-red-800 border-red-300";
+                  case "productive": return "bg-green-100 text-green-800 border-green-300";
+                  case "learning": return "bg-blue-100 text-blue-800 border-blue-300";
+                  case "exercise": return "bg-orange-100 text-orange-800 border-orange-300";
                   default: return "bg-gray-100 text-gray-800 border-gray-300";
+                }
+              };
+              
+              const getCategoryLabel = (cat: string) => {
+                switch (cat) {
+                  case "productive": return "✅ Productive";
+                  case "learning": return "📚 Learning";
+                  case "exercise": return "💪 Exercise";
+                  default: return cat;
                 }
               };
 
@@ -176,7 +185,7 @@ export function GoalManager({ goals, onAddGoal, onDeleteGoal }: GoalManagerProps
                       <div className="flex items-center gap-2 mb-1">
                         <h4>{goal.name}</h4>
                         <Badge variant="outline" className={getCategoryColor(goal.category)}>
-                          {goal.category}
+                          {getCategoryLabel(goal.category)}
                         </Badge>
                       </div>
                       <p className="text-sm text-muted-foreground">

@@ -7,9 +7,10 @@ interface StreakTrackerProps {
   dailyActivity: Array<{ date: string; hasActivity: boolean }>;
   weekCoins: number;
   totalCoins: number;
+  showTotalCoins?: boolean;
 }
 
-export function StreakTracker({ streak, dailyActivity, weekCoins, totalCoins }: StreakTrackerProps) {
+export function StreakTracker({ streak, dailyActivity, weekCoins, totalCoins, showTotalCoins = true }: StreakTrackerProps) {
   return (
     <Card>
       <CardHeader>
@@ -64,13 +65,15 @@ export function StreakTracker({ streak, dailyActivity, weekCoins, totalCoins }: 
               {weekCoins >= 0 ? '+' : ''}{weekCoins.toFixed(0)}
             </span>
           </div>
-          <div className="flex items-center justify-between p-2 rounded-lg bg-purple-100">
-            <span className="text-sm font-medium text-purple-900">Total Coins</span>
-            <span className={`flex items-center gap-1 font-bold ${totalCoins >= 0 ? 'text-purple-700' : 'text-red-600'}`}>
-              <Coins className="h-4 w-4" />
-              {totalCoins.toFixed(0)}
-            </span>
-          </div>
+          {showTotalCoins && (
+            <div className="flex items-center justify-between p-2 rounded-lg bg-purple-100">
+              <span className="text-sm font-medium text-purple-900">Total Coins</span>
+              <span className={`flex items-center gap-1 font-bold ${totalCoins >= 0 ? 'text-purple-700' : 'text-red-600'}`}>
+                <Coins className="h-4 w-4" />
+                {totalCoins.toFixed(0)}
+              </span>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>

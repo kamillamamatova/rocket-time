@@ -30,7 +30,7 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
       const greeting: Message = {
         id: Date.now().toString(),
         role: "assistant",
-        content: "Hi! I'm your AI Time Coach 🤖. I'm here to help you optimize your time and reach your goals. Ask me anything about your time usage, goals, or productivity tips!",
+        content: "Hello! I'm your AI Time Strategist 🎯. Think of me as your personal time investment advisor. I'll help you plan your time allocation, suggest optimal strategies for reaching your goals, and advise on making the best ROI from your hours. How can I help you strategize today?",
         timestamp: new Date(),
       };
       setMessages([greeting]);
@@ -49,35 +49,47 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
 
     // Check for greetings
     if (msg.match(/\b(hi|hello|hey|greetings)\b/)) {
-      return "Hello! How can I help you with your time management today?";
+      return "Hello! I'm here to help you strategically plan and optimize your time investments. What would you like to focus on today?";
+    }
+
+    // Planning and strategy queries
+    if (msg.includes("plan") || msg.includes("strategy") || msg.includes("schedule")) {
+      const productive = timeByCategory.find((c) => c.category === "productive")?.hours || 0;
+      const learning = timeByCategory.find((c) => c.category === "learning")?.hours || 0;
+      
+      return `Let me help you develop a strategic time allocation plan:\n\n**Current Portfolio:**\n• Productive work: ${productive.toFixed(1)}h\n• Learning: ${learning.toFixed(1)}h\n\n**Recommended Strategy:**\n1. Allocate 4-6 hours daily to high-ROI productive work\n2. Invest 1-2 hours in learning (compounding returns)\n3. Reserve 3-4 hours weekly for physical capital (exercise)\n4. Budget entertainment time as "dividends" (earned after hitting targets)\n\nWould you like me to create a custom allocation plan based on your specific goals?`;
     }
 
     // Wasted time analysis
-    if (msg.includes("wasted") || msg.includes("waste")) {
+    if (msg.includes("wasted") || msg.includes("waste") || msg.includes("loss")) {
       if (wastedHours > 5) {
-        return `You've spent ${wastedHours.toFixed(1)} hours on wasted activities this week. That's a loss of ${(wastedHours * 30).toFixed(0)} coins! I recommend:\n\n1. Identify your biggest time wasters\n2. Set boundaries (e.g., limit social media to 30 min/day)\n3. Redirect that time to your goals\n\nEven reducing wasted time by just 2 hours could earn you 100+ extra coins!`;
+        return `**Time Capital Analysis:**\n\nYou've incurred a loss of ${wastedHours.toFixed(1)} hours (${(wastedHours * 30).toFixed(0)} coins) in wasted activities this week.\n\n**Recovery Strategy:**\n1. Audit your time drains - what are the top 3 wasters?\n2. Implement time boundaries (e.g., 30-min caps on low-value activities)\n3. Reallocate those hours to your highest-ROI goals\n\n**Potential Gains:** Recovering just 50% of wasted time = ${((wastedHours * 0.5) * 50).toFixed(0)} additional coins!\n\nShould I help you create a reallocation plan?`;
       } else if (wastedHours > 0) {
-        return `You have ${wastedHours.toFixed(1)} hours of wasted time this week. That's pretty good! Keep being mindful of how you spend your time.`;
+        return `Minimal time losses detected (${wastedHours.toFixed(1)}h). Your capital preservation strategy is working well. Maintain this discipline!`;
       } else {
-        return "Great job! You haven't logged any wasted time this week. Keep up the excellent time management! 🌟";
+        return "Excellent capital preservation! Zero time losses this week. You're maximizing your time ROI. 📈";
       }
     }
 
     // Goal-related queries
-    if (msg.includes("goal") || msg.includes("target")) {
+    if (msg.includes("goal") || msg.includes("target") || msg.includes("progress")) {
       if (goals.length === 0) {
-        return "You haven't set any goals yet. I recommend starting with 1-2 SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound). Head to the Goals tab to create one!";
+        return "**Portfolio Alert:** You haven't established any time investment goals yet.\n\n**Recommendation:** Set 2-3 strategic goals across different categories (productive, learning, exercise) to diversify your time portfolio. Each goal should have:\n\n• Specific target (hours/week)\n• Clear ROI (what you'll gain)\n• Deadline for accountability\n\nHead to the Goals tab to build your investment portfolio!";
       }
       
-      let response = "Here's your goal progress:\n\n";
+      let response = "**Investment Portfolio Status:**\n\n";
       goals.forEach((goal) => {
         const progress = (goal.currentHours / goal.targetHours) * 100;
         const remaining = goal.targetHours - goal.currentHours;
-        response += `📌 **${goal.name}**: ${progress.toFixed(0)}% complete\n`;
+        const onTrack = progress >= 70;
+        
+        response += `📊 **${goal.name}**\n`;
+        response += `   Progress: ${progress.toFixed(0)}% ${onTrack ? '✅' : '⚠️'}\n`;
         if (progress >= 100) {
-          response += `   ✅ Completed! Great job!\n`;
+          response += `   Status: TARGET ACHIEVED! 🎯\n`;
         } else if (remaining > 0) {
-          response += `   ⏰ ${remaining.toFixed(1)} hours remaining\n`;
+          response += `   Needed: ${remaining.toFixed(1)} hours\n`;
+          response += `   Recommendation: ${onTrack ? 'Maintain pace' : 'Increase allocation'}\n`;
         }
         response += "\n";
       });
@@ -85,48 +97,50 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
       return response;
     }
 
-    // Productivity tips
-    if (msg.includes("tip") || msg.includes("advice") || msg.includes("suggest") || msg.includes("improve")) {
-      const tips = [];
+    // Productivity tips and optimization
+    if (msg.includes("tip") || msg.includes("advice") || msg.includes("suggest") || msg.includes("improve") || msg.includes("optimize")) {
+      const recommendations = [];
       
-      const entertainment = timeByCategory.find((c) => c.category === "entertainment")?.hours || 0;
+      const hobbies = timeByCategory.find((c) => c.category === "hobbies")?.hours || 0;
       const productive = timeByCategory.find((c) => c.category === "productive")?.hours || 0;
       const learning = timeByCategory.find((c) => c.category === "learning")?.hours || 0;
       const exercise = timeByCategory.find((c) => c.category === "exercise")?.hours || 0;
 
-      if (entertainment > productive && productive > 0) {
-        tips.push(`🎮 You're spending more time on entertainment (${entertainment.toFixed(1)}h) than productive work (${productive.toFixed(1)}h). Try the 80/20 rule: 80% productive, 20% fun.`);
+      recommendations.push("**Strategic Optimization Plan:**\n");
+
+      if (hobbies > productive && productive > 0) {
+        recommendations.push(`⚖️ **Portfolio Rebalancing Needed**\nHobbies: ${hobbies.toFixed(1)}h vs Productive: ${productive.toFixed(1)}h\nRecommendation: Shift to 75/25 ratio (productive/hobbies) for optimal returns.`);
       }
 
-      if (learning < 5) {
-        tips.push("📚 Invest at least 1 hour daily in learning. This compounds over time and pays massive dividends!");
+      if (learning < 7) {
+        recommendations.push(`📚 **Learning Investment Opportunity**\nCurrent: ${learning.toFixed(1)}h/week\nTarget: 7-10h/week (1-1.5h daily)\nExpected ROI: Compounding skill growth, higher earning potential`);
       }
 
       if (exercise < 3) {
-        tips.push("💪 Aim for 3-4 hours of exercise weekly. Better health = better productivity = more valuable time!");
+        recommendations.push(`💪 **Physical Capital Deficiency**\nCurrent: ${exercise.toFixed(1)}h/week\nMinimum: 3-4h/week\nWhy: Health is your foundation asset - poor health = reduced productive capacity`);
       }
 
       if (wastedHours > 2) {
-        tips.push(`⚠️ Reduce wasted time by ${Math.min(wastedHours, 2).toFixed(1)} hours and allocate it to your top priority goal.`);
+        recommendations.push(`🚨 **Capital Preservation Alert**\nLosses: ${wastedHours.toFixed(1)}h (${(wastedHours * 30).toFixed(0)} coins)\nAction: Reduce by 50% and reinvest in top-priority goals\nPotential gain: +${((wastedHours * 0.5) * 50).toFixed(0)} coins`);
       }
 
-      if (tips.length === 0) {
-        tips.push("🌟 Your time allocation looks balanced! Keep up the great work!");
-        tips.push("💡 Pro tip: Try time-blocking your calendar to protect your most productive hours.");
+      if (recommendations.length === 1) {
+        recommendations.push("✅ **Portfolio Status: Optimized**\nYour time allocation is well-balanced!");
+        recommendations.push("💡 **Advanced Strategy:** Implement time-blocking to protect high-value hours from interruptions.");
       }
 
-      return tips.join("\n\n");
+      return recommendations.join("\n\n");
     }
 
-    // Entertainment balance
-    if (msg.includes("entertainment") || msg.includes("fun") || msg.includes("relax")) {
-      const entertainment = timeByCategory.find((c) => c.category === "entertainment")?.hours || 0;
-      if (entertainment > 10) {
-        return `You've logged ${entertainment.toFixed(1)} hours of entertainment this week. While rest is important, consider if 30% of this time (${(entertainment * 0.3).toFixed(1)}h) could be invested in skill development for higher long-term returns.`;
-      } else if (entertainment > 0) {
-        return `Your entertainment time (${entertainment.toFixed(1)}h) looks reasonable. Balance is key! Make sure you're also making progress on your goals.`;
+    // Hobbies/recreation balance
+    if (msg.includes("hobbies") || msg.includes("fun") || msg.includes("relax") || msg.includes("recreation")) {
+      const hobbies = timeByCategory.find((c) => c.category === "hobbies")?.hours || 0;
+      if (hobbies > 10) {
+        return `**Recreation Analysis:**\n\nCurrent allocation: ${hobbies.toFixed(1)}h/week\n\nWhile downtime is essential for sustainability, consider this reallocation strategy:\n\n• Keep: ${(hobbies * 0.7).toFixed(1)}h for recovery\n• Redirect: ${(hobbies * 0.3).toFixed(1)}h to skill development\n\nResult: Maintain work-life balance while increasing long-term returns.`;
+      } else if (hobbies > 0) {
+        return `Recreation time: ${hobbies.toFixed(1)}h - Well balanced! You're maintaining sustainable productivity. This is your "dividend" for investing in your goals.`;
       } else {
-        return "You haven't logged any entertainment time. Don't forget to rest and recharge! All work and no play isn't sustainable.";
+        return "⚠️ **Sustainability Alert:** No recovery time logged. Burnout risk detected. Schedule 3-5h/week of hobbies to maintain long-term productivity capacity.";
       }
     }
 
@@ -149,11 +163,11 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
 
     // Default responses for common questions
     if (msg.includes("how") || msg.includes("what") || msg.includes("why")) {
-      return "I can help you with:\n\n• Analyzing your wasted time\n• Tracking goal progress\n• Getting productivity tips\n• Understanding your time breakdown\n• Optimizing your schedule\n\nWhat would you like to know?";
+      return "**Strategic Services Available:**\n\n• 📊 Portfolio Analysis (goal progress & ROI)\n• 🎯 Investment Strategy Planning\n• ⚖️ Time Allocation Optimization\n• 💰 Capital Preservation (reducing losses)\n• 📈 Growth Recommendations\n\nWhat would you like me to help you strategize?";
     }
 
     // Fallback
-    return "I'm here to help you optimize your time! You can ask me about:\n\n• Your goals and progress\n• Wasted time analysis\n• Productivity tips\n• Time breakdown by category\n• Ways to improve your schedule\n\nWhat would you like to explore?";
+    return "I'm your Time Investment Strategist. Think of your time as capital that needs strategic allocation for maximum ROI.\n\n**I can help you:**\n• Develop investment strategies for your goals\n• Analyze your time portfolio\n• Identify optimization opportunities\n• Create reallocation plans\n• Maximize your time ROI\n\nWhat strategic guidance can I provide today?";
   };
 
   const handleSend = () => {
@@ -196,10 +210,10 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lightbulb className="h-5 w-5" />
-          AI Time Coach
+          AI Time Strategist
         </CardTitle>
         <CardDescription>
-          Chat with your personal AI coach for time management insights
+          Your personal time investment advisor for strategic planning and optimization
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
@@ -249,7 +263,7 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
 
         <div className="flex gap-2">
           <Input
-            placeholder="Ask me anything about your time management..."
+            placeholder="Ask me about strategy, planning, or optimization..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -263,23 +277,23 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setInput("How are my goals progressing?")}
+            onClick={() => setInput("Analyze my investment portfolio")}
           >
-            Goal Progress
+            Portfolio Analysis
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setInput("Give me productivity tips")}
+            onClick={() => setInput("Create an optimization strategy")}
           >
-            Get Tips
+            Optimize
           </Button>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setInput("Analyze my wasted time")}
+            onClick={() => setInput("Help me plan my time allocation")}
           >
-            Wasted Time
+            Strategic Plan
           </Button>
         </div>
       </CardContent>
