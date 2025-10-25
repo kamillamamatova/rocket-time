@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
+import { AuthPage } from "./components/AuthPage";
 import { DashboardOverview } from "./components/DashboardOverview";
 import { TimeLogger } from "./components/TimeLogger";
 import { GoalManager, Goal } from "./components/GoalManager";
+import { TaskManager, Task } from "./components/TaskManager";
+import { DailyAnalysis } from "./components/DailyAnalysis";
 import { ChartsSection } from "./components/ChartsSection";
 import { AICoach } from "./components/AICoach";
 import { StreakTracker } from "./components/StreakTracker";
@@ -11,6 +14,7 @@ import { CoinSettings } from "./components/CoinSettings";
 import { RecentTransactions } from "./components/RecentTransactions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Button } from "./components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./components/ui/alert-dialog";
 import { LayoutDashboard, Clock, Target, TrendingUp, Lightbulb, Settings, LogOut } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 
@@ -24,14 +28,18 @@ interface TimeEntry {
 }
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isGoogleConnected, setIsGoogleConnected] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [coinRates, setCoinRates] = useState<Record<string, number>>({
     productive: 50,
     learning: 50,
     exercise: 50,
     social: 50,
-    entertainment: 20,
+    hobbies: 20,
     wasted: -30,
   });
 
@@ -40,11 +48,24 @@ export default function App() {
     return duration * rate;
   };
 
-  // Load data from localStorage on mount
+  // Check for saved session on mount
   useEffect(() => {
-    const savedEntries = localStorage.getItem("timeEntries");
-    const savedGoals = localStorage.getItem("goals");
-    const savedRates = localStorage.getItem("coinRates");
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedUser) {
+      setCurrentUser(savedUser);
+    }
+  }, []);
+
+  // Load user-specific data when user logs in
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const userKey = `user_${currentUser}`;
+    const savedEntries = localStorage.getItem(`${userKey}_timeEntries`);
+    const savedGoals = localStorage.getItem(`${userKey}_goals`);
+    const savedTasks = localStorage.getItem(`${userKey}_tasks`);
+    const savedRates = localStorage.getItem(`${userKey}_coinRates`);
+    const savedGoogleConnect = localStorage.getItem(`${userKey}_isGoogleConnected`);
 
     if (savedEntries) {
       setTimeEntries(JSON.parse(savedEntries));
@@ -52,23 +73,47 @@ export default function App() {
     if (savedGoals) {
       setGoals(JSON.parse(savedGoals));
     }
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
     if (savedRates) {
       setCoinRates(JSON.parse(savedRates));
     }
-  }, []);
+    if (savedGoogleConnect) {
+      setIsGoogleConnected(JSON.parse(savedGoogleConnect));
+    }
+  }, [currentUser]);
 
-  // Save to localStorage whenever data changes
+  // Save to localStorage whenever data changes (user-specific)
   useEffect(() => {
-    localStorage.setItem("timeEntries", JSON.stringify(timeEntries));
-  }, [timeEntries]);
+    if (!currentUser) return;
+    const userKey = `user_${currentUser}`;
+    localStorage.setItem(`${userKey}_timeEntries`, JSON.stringify(timeEntries));
+  }, [timeEntries, currentUser]);
 
   useEffect(() => {
-    localStorage.setItem("goals", JSON.stringify(goals));
-  }, [goals]);
+    if (!currentUser) return;
+    const userKey = `user_${currentUser}`;
+    localStorage.setItem(`${userKey}_goals`, JSON.stringify(goals));
+  }, [goals, currentUser]);
 
   useEffect(() => {
-    localStorage.setItem("coinRates", JSON.stringify(coinRates));
-  }, [coinRates]);
+    if (!currentUser) return;
+    const userKey = `user_${currentUser}`;
+    localStorage.setItem(`${userKey}_tasks`, JSON.stringify(tasks));
+  }, [tasks, currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const userKey = `user_${currentUser}`;
+    localStorage.setItem(`${userKey}_coinRates`, JSON.stringify(coinRates));
+  }, [coinRates, currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const userKey = `user_${currentUser}`;
+    localStorage.setItem(`${userKey}_isGoogleConnected`, JSON.stringify(isGoogleConnected));
+  }, [isGoogleConnected, currentUser]);
 
   const handleAddEntry = (entry: Omit<TimeEntry, "id" | "date">) => {
     const newEntry: TimeEntry = {
@@ -123,6 +168,70 @@ export default function App() {
     setTimeEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
+  const handleAddTask = (task: Omit<Task, "id" | "date">) => {
+    const newTask: Task = {
+      ...task,
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+    };
+    setTasks((prev) => [...prev, newTask]);
+  };
+
+  const handleUpdateTaskStatus = (
+    id: string,
+    status: Task["status"],
+    duration?: number,
+    category?: string
+  ) => {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+
+    // Update task status
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, status, duration, category }
+          : t
+      )
+    );
+
+    // If completed, auto-log as time entry
+    if (status === "complete" && duration && category) {
+      const newEntry: TimeEntry = {
+        id: Date.now().toString(),
+        activity: task.title,
+        category: category,
+        duration: duration,
+        date: new Date().toISOString(),
+        goalId: task.goalId,
+      };
+      setTimeEntries((prev) => [...prev, newEntry]);
+
+      // Update goal progress
+      if (task.goalId) {
+        setGoals((prev) =>
+          prev.map((goal) =>
+            goal.id === task.goalId
+              ? { ...goal, currentHours: goal.currentHours + duration }
+              : goal
+          )
+        );
+      }
+    }
+  };
+
+  const handleDeleteTask = (id: string) => {
+    setTasks((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  const handleEditTask = (id: string, updates: Partial<Task>) => {
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...t, ...updates } : t
+      )
+    );
+  };
+
   // Calculate metrics
   const today = new Date().toDateString();
   const todayEntries = timeEntries.filter(
@@ -156,9 +265,17 @@ export default function App() {
     .filter((e) => e.category === "wasted")
     .reduce((sum, e) => sum + e.duration, 0);
 
-  const targetHours = goals.reduce((sum, g) => sum + g.targetHours, 0);
-  const currentHours = goals.reduce((sum, g) => sum + g.currentHours, 0);
-  const coinBalance = currentHours * 50 - targetHours * 50;
+  // Calculate total coins deficit from overdue goals only
+  const now = new Date();
+  const overdueDeficit = goals.reduce((deficit, goal) => {
+    if (goal.deadline && new Date(goal.deadline) < now) {
+      const hoursShort = Math.max(0, goal.targetHours - goal.currentHours);
+      return deficit - (hoursShort * 50); // Penalty for overdue incomplete goals
+    }
+    return deficit;
+  }, 0);
+  
+  const coinBalance = totalCoinsAllTime + overdueDeficit;
 
   // Calculate streak (only count days with goal-linked entries)
   const goalLinkedEntries = timeEntries.filter((e) => e.goalId);
@@ -259,6 +376,40 @@ export default function App() {
     };
   });
 
+  const handleLogin = (username: string) => {
+    setCurrentUser(username);
+    localStorage.setItem("currentUser", username);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem("currentUser");
+    // Clear state
+    setTimeEntries([]);
+    setGoals([]);
+    setTasks([]);
+    setCoinRates({
+      productive: 50,
+      learning: 50,
+      exercise: 50,
+      social: 50,
+      hobbies: 20,
+      wasted: -30,
+    });
+    setIsGoogleConnected(false);
+    setShowLogoutDialog(false);
+  };
+
+  // Show auth page if not logged in
+  if (!currentUser) {
+    return (
+      <>
+        <Toaster />
+        <AuthPage onLogin={handleLogin} />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Toaster />
@@ -274,19 +425,38 @@ export default function App() {
                 Track your time, earn coins, achieve your goals!
               </p>
             </div>
-            <Button 
-              variant="destructive" 
-              className="shadow-lg hover:shadow-xl transition-all hover:scale-105"
-              size="lg"
-              onClick={() => {
-                if (confirm("Are you sure you want to log out? Your data is saved locally.")) {
-                  window.location.reload();
-                }
-              }}
-            >
-              <LogOut className="h-5 w-5 mr-2" />
-              Log Out
-            </Button>
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Logged in as</p>
+                <p className="font-medium">{currentUser}</p>
+              </div>
+              <Button 
+                variant="destructive" 
+                className="shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                size="lg"
+                onClick={() => setShowLogoutDialog(true)}
+              >
+                <LogOut className="h-5 w-5 mr-2" />
+                Log Out
+              </Button>
+              
+              <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You'll need to log back in to access your dashboard. All your data is safely saved.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Logout
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </div>
         </div>
       </div>
@@ -304,7 +474,7 @@ export default function App() {
             </TabsTrigger>
             <TabsTrigger value="goals">
               <Target className="h-4 w-4 mr-2" />
-              Goals
+              Goals/Tasks
             </TabsTrigger>
             <TabsTrigger value="analytics">
               <TrendingUp className="h-4 w-4 mr-2" />
@@ -332,8 +502,9 @@ export default function App() {
                 dailyActivity={dailyActivity}
                 weekCoins={totalCoinsWeek}
                 totalCoins={totalCoinsAllTime}
+                showTotalCoins={false}
               />
-              <HabitSubscription timeEntries={timeEntries} />
+              <HabitSubscription timeEntries={timeEntries} goals={goals} />
             </div>
           </TabsContent>
 
@@ -352,25 +523,41 @@ export default function App() {
               entries={weekEntries}
               goals={goals}
               calculateCoins={calculateCoins}
+              onDeleteEntry={handleDeleteEntry}
+            />
+
+            <DailyAnalysis
+              entries={timeEntries}
+              goals={goals}
             />
           </TabsContent>
 
           <TabsContent value="goals" className="space-y-6">
-            <GoalManager
-              goals={goals}
-              onAddGoal={handleAddGoal}
-              onDeleteGoal={handleDeleteGoal}
-            />
+            <div className="grid gap-6 md:grid-cols-2">
+              <GoalManager
+                goals={goals}
+                onAddGoal={handleAddGoal}
+                onDeleteGoal={handleDeleteGoal}
+              />
+              <TaskManager
+                tasks={tasks}
+                goals={goals}
+                onAddTask={handleAddTask}
+                onUpdateTaskStatus={handleUpdateTaskStatus}
+                onDeleteTask={handleDeleteTask}
+                onEditTask={handleEditTask}
+                isGoogleConnected={isGoogleConnected}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
             {timeByCategory.length > 0 ? (
               <>
-                <WeeklyTrendChart dailyTrend={dailyTrend} />
                 <ChartsSection
                   timeByCategory={timeByCategory}
-                  dailyTrend={dailyTrend}
                 />
+                <WeeklyTrendChart dailyTrend={dailyTrend} />
               </>
             ) : (
               <div className="text-center py-12">
@@ -393,6 +580,8 @@ export default function App() {
             <CoinSettings
               coinRates={coinRates}
               onUpdateRates={setCoinRates}
+              isGoogleConnected={isGoogleConnected}
+              onToggleGoogleCalendar={() => setIsGoogleConnected(!isGoogleConnected)}
             />
           </TabsContent>
         </Tabs>

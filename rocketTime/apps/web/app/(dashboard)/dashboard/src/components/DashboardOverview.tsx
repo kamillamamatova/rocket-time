@@ -45,21 +45,21 @@ export function DashboardOverview({
 
       <Card className="border-2 border-purple-300 bg-gradient-to-br from-purple-50 to-pink-50">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-purple-900">Coin Balance</CardTitle>
+          <CardTitle className="text-purple-900">Total Coins</CardTitle>
           <Target className="h-5 w-5 text-purple-500" />
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline gap-2">
             <span className={`text-3xl font-bold ${coinBalance >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
-              🪙 {coinBalance >= 0 ? '+' : ''}{coinBalance.toFixed(0)}
+              🪙 {coinBalance.toFixed(0)}
             </span>
             {coinBalance >= 0 ? (
               <Badge className="bg-green-100 text-green-800 border-green-300">
-                Surplus
+                {coinBalance > 0 ? 'Positive' : 'Neutral'}
               </Badge>
             ) : (
               <Badge className="bg-red-100 text-red-800 border-red-300">
-                Deficit
+                Overdue Penalty
               </Badge>
             )}
           </div>
@@ -67,12 +67,12 @@ export function DashboardOverview({
             {coinBalance >= 0 ? (
               <span className="flex items-center gap-1 text-green-700 font-medium">
                 <TrendingUp className="h-3 w-3" />
-                Ahead of goals
+                {coinBalance > 0 ? 'Keep earning!' : 'Start logging time'}
               </span>
             ) : (
               <span className="flex items-center gap-1 text-red-700 font-medium">
                 <TrendingDown className="h-3 w-3" />
-                Behind goals
+                Overdue goals penalty
               </span>
             )}
           </p>
