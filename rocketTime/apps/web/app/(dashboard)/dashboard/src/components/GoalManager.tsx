@@ -7,7 +7,7 @@ import { Progress } from "./ui/progress";
 import { Badge } from "./ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Target, Plus, Trash2, Calendar } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 export interface Goal {
   id: string;
