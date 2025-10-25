@@ -8,7 +8,7 @@ interface TimeEntry {
   date: string;
   activity: string;
   duration: number;
-  category: "Productive" | "Entertainment" | "Wasted";
+  category: "Productive" | "Hobbies" | "Time Wasted" | "Learning" | "Social" | "Exercise";
   goalId?: string;
 }
 
@@ -27,10 +27,13 @@ interface RecentTransactionsProps {
 const getCategoryBadgeStyle = (category: string) => {
   switch (category) {
     case "Productive":
+    case "Learning":
+    case "Exercise":
       return "bg-green-100 text-green-800 border-green-300";
-    case "Entertainment":
+    case "Hobbies":
+    case "Social":
       return "bg-blue-100 text-blue-800 border-blue-300";
-    case "Wasted":
+    case "Time Wasted":
       return "bg-red-100 text-red-800 border-red-300";
     default:
       return "bg-gray-100 text-gray-800 border-gray-300";
@@ -40,11 +43,14 @@ const getCategoryBadgeStyle = (category: string) => {
 const getCategoryType = (category: string) => {
   switch (category) {
     case "Productive":
+    case "Learning":
+    case "Exercise":
       return { label: "Investment", style: "bg-green-500 text-white hover:bg-green-600" };
-    case "Entertainment":
+    case "Hobbies":
+    case "Social":
       return { label: "Entertainment", style: "bg-blue-500 text-white hover:bg-blue-600" };
-    case "Wasted":
-      return { label: "Waste", style: "bg-red-500 text-white hover:bg-red-600" };
+    case "Time Wasted":
+      return { label: "Time Wasted", style: "bg-red-500 text-white hover:bg-red-600" };
     default:
       return { label: category, style: "bg-gray-500 text-white hover:bg-gray-600" };
   }

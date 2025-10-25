@@ -21,7 +21,7 @@ import { Toaster } from "./components/ui/sonner";
 interface TimeEntry {
   id: string;
   activity: string;
-  category: string;
+  category: "Productive" | "Hobbies" | "Time Wasted" | "Learning" | "Social" | "Exercise";
   duration: number;
   date: string;
   goalId?: string;
@@ -38,7 +38,7 @@ export default function App() {
     productive: 50,
     learning: 50,
     exercise: 50,
-    social: 50,
+    social: 30,
     hobbies: 20,
     wasted: -30,
   });
@@ -60,16 +60,40 @@ export default function App() {
   useEffect(() => {
     if (!currentUser) return;
 
+    const loadUserData = async () => {
+      try {
+        const res = await fetch(`http://localhost:3000/services/getLog/${currentUser}`);
+        if (!res.ok) throw new Error("Failed to fetch time logs");
+
+        const data = await res.json();
+
+        if (data.timelogs) {
+          // Transform to your frontend structure if needed
+          const formatted = data.timelogs.map((log: any) => ({
+            id: log.id.toString(),
+            activity: log.title,
+            category: log.category,
+            duration: log.duration_hr,
+            date: log.date,
+            goalId: log.goal_id || undefined,
+          }));
+          setTimeEntries(formatted);
+        } else {
+          console.log(data.message || "No logs found for this user.");
+        }
+
+      } catch (err) {
+        console.error("Error loading user time logs:", err);
+      }
+    };
+
+    loadUserData();
+
     const userKey = `user_${currentUser}`;
-    const savedEntries = localStorage.getItem(`${userKey}_timeEntries`);
     const savedGoals = localStorage.getItem(`${userKey}_goals`);
     const savedTasks = localStorage.getItem(`${userKey}_tasks`);
     const savedRates = localStorage.getItem(`${userKey}_coinRates`);
     const savedGoogleConnect = localStorage.getItem(`${userKey}_isGoogleConnected`);
-
-    if (savedEntries) {
-      setTimeEntries(JSON.parse(savedEntries));
-    }
     if (savedGoals) {
       setGoals(JSON.parse(savedGoals));
     }
@@ -200,7 +224,7 @@ export default function App() {
       const newEntry: TimeEntry = {
         id: Date.now().toString(),
         activity: task.title,
-        category: category,
+        category: category as TimeEntry["category"],
         duration: duration,
         date: new Date().toISOString(),
         goalId: task.goalId,
@@ -258,11 +282,11 @@ export default function App() {
   );
 
   const productiveHours = weekEntries
-    .filter((e) => e.category === "productive" || e.category === "learning")
+    .filter((e) => e.category === "Productive" || e.category === "Learning")
     .reduce((sum, e) => sum + e.duration, 0);
 
   const wastedHours = weekEntries
-    .filter((e) => e.category === "wasted")
+    .filter((e) => e.category === "Time Wasted")
     .reduce((sum, e) => sum + e.duration, 0);
 
   // Calculate total coins deficit from overdue goals only

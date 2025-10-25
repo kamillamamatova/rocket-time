@@ -7,7 +7,7 @@ interface TimeEntry {
   date: string;
   activity: string;
   duration: number;
-  category: "Productive" | "Entertainment" | "Wasted";
+  category: "Productive" | "Hobbies" | "Time Wasted" | "Learning" | "Social" | "Exercise";
   goalId?: string;
 }
 
@@ -88,7 +88,7 @@ export function HabitSubscription({ timeEntries, goals }: HabitSubscriptionProps
     weekStart.setDate(weekStart.getDate() - 7);
     const weekEntries = timeEntries.filter((e) => new Date(e.date) >= weekStart);
     
-    const wastedEntries = weekEntries.filter((e) => e.category === "Wasted");
+    const wastedEntries = weekEntries.filter((e) => e.category === "Time Wasted");
     const totalWastedHours = wastedEntries.reduce((sum, e) => sum + e.duration, 0);
     
     if (totalWastedHours > 10) {
@@ -121,7 +121,7 @@ export function HabitSubscription({ timeEntries, goals }: HabitSubscriptionProps
     }
     
     // Check for excessive entertainment
-    const entertainmentEntries = weekEntries.filter((e) => e.category === "Entertainment");
+    const entertainmentEntries = weekEntries.filter((e) => e.category === "Hobbies");
     const totalEntertainmentHours = entertainmentEntries.reduce((sum, e) => sum + e.duration, 0);
     
     if (totalEntertainmentHours > 20) {

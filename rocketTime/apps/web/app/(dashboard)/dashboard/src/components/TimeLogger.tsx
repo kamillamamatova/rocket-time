@@ -5,12 +5,12 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Clock, Plus } from "lucide-react";
-import { toast } from "sonner@2.0.3";
+import { toast } from "sonner";
 
 interface TimeEntry {
   id: string;
   activity: string;
-  category: string;
+  category: "Productive" | "Hobbies" | "Time Wasted" | "Learning" | "Social" | "Exercise";
   duration: number;
   date: string;
   goalId?: string;
@@ -48,7 +48,7 @@ export function TimeLogger({ onAddEntry, goals }: TimeLoggerProps) {
 
     onAddEntry({
       activity,
-      category,
+      category: category as TimeEntry["category"],
       duration: durationNum,
       goalId: goalId || undefined,
     });
