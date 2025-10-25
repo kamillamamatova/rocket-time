@@ -4,7 +4,7 @@ import db from './db.js'; // import database
 export async function getTimeLogs(userId){
     try{
         const rows = await db.query(
-            `SELECT id, goal_id, date, duration_hr, category
+            `SELECT id, goal_id, date, duration_hr, category, title
              FROM timelogs
              WHERE user_id = ?`,
             [userId]
