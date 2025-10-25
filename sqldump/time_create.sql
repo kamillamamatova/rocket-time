@@ -57,6 +57,22 @@ CREATE TABLE timelogs (
 
 )ENGINE=InnoDB;
 
+-- Create OAuth credentials table
+CREATE TABLE oauth_credentials (
+  id INT NOT NULL AUTO_INCREMENT,
+  user_id VARCHAR(255) NOT NULL,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT,
+  token_expiry DATETIME NOT NULL,
+  scope TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY unique_user_oauth (user_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+
 INSERT INTO timelogs(user_id, goal_id, date, duration_hr,category, title)
 VALUES
 (1,1,'2025-9-20', 5.5, 'learning', 'Learning basic words for asl'),
