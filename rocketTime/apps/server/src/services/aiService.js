@@ -3,7 +3,7 @@
 import 'dotenv/config';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 // ⬇️ import the JSON schema
-import ParseSchema from '../schemas/parse.schema.json' assert { type: 'json' };
+import ParseSchema from '../schemas/parse.schema.js';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 

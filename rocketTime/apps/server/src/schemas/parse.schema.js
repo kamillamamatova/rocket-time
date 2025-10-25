@@ -1,0 +1,44 @@
+
+export default {
+  type: "object",
+  properties: {
+    intent: {
+      type: "string",
+      enum: ["CREATE_EVENT","ADD_TASK","PLAN_WEEK","PRIORITIZE","ASK_FEEDBACK","SMALL_TALK"]
+    },
+    event: {
+      type: "object",
+      properties: {
+        title: { type: "string" },
+        date: { type: "string" },
+        startTime: { type: "string" },
+        endTime: { type: "string" },
+        durationMins: { type: "integer" },
+        location: { type: "string" },
+        attendees: { type: "array", items: { type: "string" } }
+      }
+    },
+    task: {
+      type: "object",
+      properties: {
+        title: { type: "string" },
+        estMinutes: { type: "integer" },
+        deadline: { type: "string" }
+      }
+    },
+    preferences: {
+      type: "object",
+      properties: {
+        workingHours: {
+          type: "object",
+          properties: {
+            start: { type: "string" },
+            end: { type: "string" }
+          }
+        },
+        timezone: { type: "string" }
+      }
+    }
+  },
+  required: ["intent"]
+};
