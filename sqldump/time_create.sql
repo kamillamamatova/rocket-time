@@ -21,7 +21,7 @@ CREATE TABLE goals (
     user_id INT NOT NULL,
     title VARCHAR(200),
     target_hours INT,
-    category ENUM('productive', 'learning', 'excercise','social', 'entertainment'),
+    category ENUM('productive', 'learning', 'excercise'),
     deadline DATE,
     progress_hours FLOAT DEFAULT 0,
     status ENUM('not started', 'in progress', 'completed') DEFAULT 'not started',
@@ -49,15 +49,18 @@ CREATE TABLE timelogs (
     goal_id INT,
     date DATE,
 	duration_hr FLOAT,
-	category ENUM('productive', 'learning', 'excercise','social', 'entertainment', 'time wasted'),
+	category ENUM('productive', 'learning', 'excercise','social', 'hobbies', 'time wasted'),
+   title VARCHAR(200),
     PRIMARY KEY (id, user_id),
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE CASCADE
 
 )ENGINE=InnoDB;
 
-INSERT INTO timelogs(user_id, goal_id, date, duration_hr,category)
+INSERT INTO timelogs(user_id, goal_id, date, duration_hr,category, title)
 VALUES
-(1,1,'2025-9-20', 5.5, 'learning'),
-(1,NULL,'2025-9-2', 1,'time wasted'),
-(1,3,'2025-10-20', 2.1, 'productive');
+(1,1,'2025-9-20', 5.5, 'learning', 'Learning basic words for asl'),
+(1,NULL,'2025-9-2', 1,'time wasted', 'Doom scrolling'),
+(1,NULL,'2025-3-1', 1,'social', 'Hosting brunch'),
+(1,NULL,'2025-4-20', 1,'hobbies', 'Knitting'),
+(1,3,'2025-10-20', 2.1, 'productive', '');
