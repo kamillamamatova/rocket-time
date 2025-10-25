@@ -3,9 +3,9 @@ import cors from 'cors';
 import session from 'cookie-session';
 import 'dotenv/config';
 
-/*import auth from './routes/auth.js';
+import auth from './routes/auth.js';
 import agent from './routes/chatRoute.js';
-import calendar from './routes/taskRoutes.js';*/
+import calendar from './routes/taskRoutes.js';
 
 import {query} from './services/db.js';
 import getLogRouter from './routes/getLogRoute.js';
