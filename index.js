@@ -3,12 +3,12 @@ import cors from 'cors';
 import session from 'cookie-session';
 import 'dotenv/config';
 
-import auth from './routes/auth.js';
-import agent from './routes/chatRoute.js';
-import calendar from './routes/taskRoutes.js';
+import auth from './rocketTime/apps/server/src/routes/auth.js';
+import agent from './rocketTime/apps/server/src/routes/chatRoute.js';
+import calendar from './rocketTime/apps/server/src/routes/taskRoutes.js';
 
-import {query} from './services/db.js';
-import getLogRouter from './routes/getLogRoute.js';
+import {query} from './rocketTime/apps/server/src/services/db.js';
+import getLogRouter from './rocketTime/apps/server/src/routes/getLogRoute.js';
 
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
