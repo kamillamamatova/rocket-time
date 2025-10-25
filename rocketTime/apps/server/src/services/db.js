@@ -1,21 +1,19 @@
-//connect express to mysql
 import mysql from 'mysql2/promise';
+import 'dotenv/config';
 
-// create a connection
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'KHacks',
-  password: 'hacking',
-  database: 'time',
-  waitForConnections:true,
-  connectionLimit:10,
-  queueLimit:0
+export const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST,
+  port: Number(process.env.MYSQL_PORT || 3306),
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DB,
+  waitForConnections: true,
+  connectionLimit: 10,
 });
 
-// connect to mySQL
-export async function query(sql, params) {
-  const [results] = await pool.execute(sql, params);
-  return results;
+// Convenience query helper (prepared statements)
+async function query(sql, params = []) {
+  return pool.execute(sql, params);
 }
 
-export default { query };
+module.exports = { pool, query };
