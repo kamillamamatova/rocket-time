@@ -94,7 +94,7 @@ export function TimeLogger({ onAddEntry, goals }: TimeLoggerProps) {
                 <SelectItem value="learning">📚 Learning</SelectItem>
                 <SelectItem value="exercise">💪 Exercise</SelectItem>
                 <SelectItem value="social">👥 Social</SelectItem>
-                <SelectItem value="entertainment">🎮 Entertainment</SelectItem>
+                <SelectItem value="hobbies">🎨 Hobbies</SelectItem>
                 <SelectItem value="wasted">⏰ Time Wasted</SelectItem>
               </SelectContent>
             </Select>

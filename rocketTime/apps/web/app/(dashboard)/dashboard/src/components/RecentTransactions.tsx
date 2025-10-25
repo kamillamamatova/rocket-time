@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { TrendingDown, TrendingUp } from "lucide-react";
+import { Button } from "./ui/button";
+import { TrendingDown, TrendingUp, Trash2 } from "lucide-react";
 
 interface TimeEntry {
   id: string;
@@ -20,6 +21,7 @@ interface RecentTransactionsProps {
   entries: TimeEntry[];
   goals: Goal[];
   calculateCoins: (duration: number, category: string) => number;
+  onDeleteEntry: (id: string) => void;
 }
 
 const getCategoryBadgeStyle = (category: string) => {
@@ -65,6 +67,7 @@ export function RecentTransactions({
   entries,
   goals,
   calculateCoins,
+  onDeleteEntry,
 }: RecentTransactionsProps) {
   const recentEntries = entries.slice(-10).reverse();
 
@@ -135,6 +138,16 @@ export function RecentTransactions({
                     </span>
                   </div>
                 </div>
+
+                {/* Delete Button */}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => onDeleteEntry(entry.id)}
+                  className="shrink-0"
+                >
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
               </div>
             );
           })}
