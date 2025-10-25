@@ -22,7 +22,7 @@ app.use('/api/calendar', calendar);
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
 //call getLog.js
-app.use('/services/getLog', getLogRouter);
+app.use('/getLog', getLogRouter);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
