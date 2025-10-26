@@ -3,7 +3,7 @@ import db from './db.js';
 export async function getGoalLogs(user_Id){
     try{
         const rows = await db.query(
-            `SELECT user_id, title, target_hours, category, deadline, progress_hours, status
+            `SELECT id, title, target_hours, category, deadline, progress_hours, status
              FROM goals
              WHERE user_id = ?`,
             [user_Id]

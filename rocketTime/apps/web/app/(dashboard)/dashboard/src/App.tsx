@@ -98,9 +98,39 @@ export default function App() {
       }
     };
 
+    const loadUserGoals = async () => {
+      try {
+        //const res = await fetch(`http://localhost:3001/getGoal/${userId}`);----------------
+        const res = await fetch(`http://localhost:3001/getGoal/1`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error("Failed to fetch goals");
+      
+        if (data.goals && Array.isArray(data.goals)) {
+          const formattedGoals = data.goals.map((g: any) => ({
+            id: g.id,
+            title: g.title,
+            targetHours: g.target_hours,
+            currentHours: g.progress_hours,
+            category: g.category,
+            deadline: g.deadline,
+          }));
+          setGoals(formattedGoals);
+        } else {
+          setGoals([]);
+          console.log(data.message || "No goals found");
+        }
+      } catch (err) {
+        console.error("Failed to fetch goals:", err);
+      }
+    };
+
     // Load localStorage data first
     const userKey = `user_${currentUser}`;
-    const savedGoals = localStorage.getItem(`${userKey}_goals`);
     const savedTasks = localStorage.getItem(`${userKey}_tasks`);
     const savedRates = localStorage.getItem(`${userKey}_coinRates`);
     const savedGoogleConnect = localStorage.getItem(`${userKey}_isGoogleConnected`);
@@ -110,28 +140,28 @@ export default function App() {
       setTimeEntries(JSON.parse(savedEntries));
     }
 
-    if (savedGoals) setGoals(JSON.parse(savedGoals));
     if (savedTasks) setTasks(JSON.parse(savedTasks));
     if (savedRates) setCoinRates(JSON.parse(savedRates));
     if (savedGoogleConnect) setIsGoogleConnected(JSON.parse(savedGoogleConnect));
 
     // Then refresh from backend
     loadUserData();
+    loadUserGoals();
   }, [currentUser]);
 
 
   // Save to localStorage whenever data changes (user-specific)
-  useEffect(() => {
-    if (!currentUser) return;
-    const userKey = `user_${currentUser}`;
-    localStorage.setItem(`${userKey}_timeEntries`, JSON.stringify(timeEntries));
-  }, [timeEntries, currentUser]);
+  //useEffect(() => {
+  //  if (!currentUser) return;
+  //  const userKey = `user_${currentUser}`;
+  //  localStorage.setItem(`${userKey}_timeEntries`, JSON.stringify(timeEntries));
+  //}, [timeEntries, currentUser]);
 
-  useEffect(() => {
-    if (!currentUser) return;
-    const userKey = `user_${currentUser}`;
-    localStorage.setItem(`${userKey}_goals`, JSON.stringify(goals));
-  }, [goals, currentUser]);
+  //useEffect(() => {
+  //  if (!currentUser) return;
+  //  const userKey = `user_${currentUser}`;
+  //  localStorage.setItem(`${userKey}_goals`, JSON.stringify(goals));
+  //}, [goals, currentUser]);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -181,14 +211,31 @@ export default function App() {
     setGoals((prev) => [...prev, newGoal]);
   };
 
-  const handleDeleteGoal = (id: string) => {
-    setGoals((prev) => prev.filter((g) => g.id !== id));
+  const handleDeleteGoal = async (id: string) => {
+    try {
+      const res = await fetch(`http://localhost:3001/deleteGoal/${id}`, {
+        method: "DELETE",
+      }); 
+
+      const data = await res.json();  
+
+      if (!res.ok) {
+        console.error("Failed to delete goal:", data.error);
+        return;
+      } 
+
+      // Update state only if delete was successful
+      setGoals((prev) => prev.filter((g) => g.id !== id));
+      console.log("Goal deleted successfully:", data.message);
+    } catch (err) {
+      console.error("Error deleting goal:", err);
+    }
   };
 
   const handleDeleteEntry = async (id: string) => {
     try {
       // Delete on the server
-      const res = await fetch(`http://localhost:3001/deleteLog/1`, { //-----------------------------
+      const res = await fetch(`http://localhost:3001/deleteLog/${id}`, { 
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
       });

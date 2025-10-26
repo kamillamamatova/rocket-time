@@ -55,7 +55,7 @@ export function CoinSettings({
       productive: 50,
       learning: 50,
       exercise: 50,
-      social: 50,
+      social: 30,
       hobbies: 20,
       wasted: -30,
     };
