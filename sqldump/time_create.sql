@@ -12,9 +12,9 @@ CREATE TABLE users (
   PRIMARY KEY (id)
 )ENGINE=InnoDB;
 
-INSERT INTO users (first_name, last_name, username, password)
+INSERT INTO users (first_name, last_name, email, password)
 VALUES
-('Eileen', 'Tomy', 'etomy', 'hack'),
+('Eileen', 'Tomy', 'sofiacamilacreates@gmail.com', 'hack'),
 ('Default', 'User', 'user', 'test');
 
 CREATE TABLE goals (
