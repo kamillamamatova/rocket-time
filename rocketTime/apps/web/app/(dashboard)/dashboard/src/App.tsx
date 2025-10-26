@@ -53,12 +53,46 @@ export default function App() {
     return duration * rate;
   };
 
-  // Check for saved session on mount
+  // Check for saved session on mount and verify auth with server
   useEffect(() => {
-    const savedUser = localStorage.getItem("currentUser");
-    if (savedUser) {
-      setCurrentUser(savedUser);
-    }
+    const checkAuth = async () => {
+      try {
+        // First check if user is authenticated on the server
+        console.log("Hello?")
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/me`, {
+          credentials: 'include'
+        });
+
+        console.log("Response: ", response)
+        
+        if (response.ok) {
+          const data = await response.json();
+          console.log("Data: ", data)
+          if (data.user) {
+            // User is authenticated on server
+            const username = data.user.email || data.user.first_name || data.user.id;
+            setCurrentUser(username);
+            localStorage.setItem("currentUser", username);
+            localStorage.setItem("currentUserInfo", JSON.stringify(data.user));
+          }
+        } else {
+          // If not authenticated on server, check localStorage for local session
+          const savedUser = localStorage.getItem("currentUser");
+          if (savedUser) {
+            setCurrentUser(savedUser);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+        // Fallback to localStorage for local-only sessions
+        const savedUser = localStorage.getItem("currentUser");
+        if (savedUser) {
+          setCurrentUser(savedUser);
+        }
+      }
+    };
+
+    checkAuth();
   }, []);
 
   // Load user-specific data when user logs in
@@ -436,14 +470,35 @@ export default function App() {
     };
   });
 
-  const handleLogin = (username: string) => {
-    setCurrentUser(username);
-    localStorage.setItem("currentUser", username);
+  const handleLogin = async (userInfo: any) => {
+    if (typeof userInfo === 'string') {
+      // Legacy support for old username-based auth
+      setCurrentUser(userInfo);
+      localStorage.setItem("currentUser", userInfo);
+    } else {
+      // OAuth user info
+      const username = userInfo.email || userInfo.first_name || userInfo.id;
+      setCurrentUser(username);
+      localStorage.setItem("currentUser", username);
+      // Store full user info for display
+      localStorage.setItem("currentUserInfo", JSON.stringify(userInfo));
+    }
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Call server logout endpoint
+      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+    
     setCurrentUser(null);
     localStorage.removeItem("currentUser");
+    localStorage.removeItem("currentUserInfo");
     // Clear state
     setTimeEntries([]);
     setGoals([]);
@@ -488,7 +543,22 @@ export default function App() {
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Logged in as</p>
-                <p className="font-medium">{currentUser}</p>
+                <p className="font-medium">
+                  {(() => {
+                    const userInfoStr = localStorage.getItem("currentUserInfo");
+                    if (userInfoStr) {
+                      try {
+                        const userInfo = JSON.parse(userInfoStr);
+                        return userInfo.first_name && userInfo.last_name 
+                          ? `${userInfo.first_name} ${userInfo.last_name}` 
+                          : userInfo.email || currentUser;
+                      } catch (e) {
+                        return currentUser;
+                      }
+                    }
+                    return currentUser;
+                  })()}
+                </p>
               </div>
               <Button 
                 variant="destructive" 
