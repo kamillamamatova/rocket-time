@@ -15,6 +15,8 @@ export default {
         endTime: { type: "string" },
         durationMins: { type: "integer" },
         location: { type: "string" },
+        description: { type: "string" },
+        timezone: { type: "string" },
         attendees: { type: "array", items: { type: "string" } }
       }
     },

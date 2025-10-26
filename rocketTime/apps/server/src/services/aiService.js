@@ -9,12 +9,45 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 const SYSTEM = `
 You are a time-management assistant.
-Classify user messages into: ["CREATE_EVENT","ADD_TASK","PLAN_WEEK","PRIORITIZE","ASK_FEEDBACK","SMALL_TALK"].
-Extract fields when relevant:
-- event: {title, date?, startTime?, endTime?, durationMins?, location?, attendees[]}
-- task: {title, estMinutes?, deadline?}
-- preferences: {workingHours:{start,end}, timezone}
-Return ONLY JSON matching the schema.
+Return ONLY JSON that matches the provided schema.
+
+Classify user messages into one of:
+["CREATE_EVENT","ADD_TASK","PLAN_WEEK","PRIORITIZE","ASK_FEEDBACK","SMALL_TALK"].
+
+When intent = "CREATE_EVENT", extract:
+event: {
+  title,               // REQUIRED, concise (<= 80 chars), single sentence
+  date,                // REQUIRED, YYYY-MM-DD (resolve "tomorrow", "next Wed", etc.)
+  startTime,           // REQUIRED, HH:MM (24-hour)
+  endTime?,            // HH:MM (24-hour) OR
+  durationMins?,       // integer minutes (use if endTime is missing)
+  location?,           // optional short string
+  attendees?,          // optional list of emails
+  description?         // optional, <= 800 chars, multiline allowed
+}
+
+STRICT RULES:
+- NEVER copy the user’s entire message into "title".
+- "title" must summarize the event in <= 80 characters, no trailing punctuation spam.
+- If the user includes long text, put it in "description" (<= 800 chars) instead.
+- Always include "date" and "startTime". If no duration is given, set "durationMins": 60.
+- Dates must be absolute (YYYY-MM-DD), not relative.
+- Times must be 24-hour HH:MM.
+
+Example:
+User: "Create a meeting tomorrow at 3 PM for 2 hours in the conference room"
+Response:
+{
+  "intent": "CREATE_EVENT",
+  "event": {
+    "title": "Team meeting",
+    "date": "2024-12-20",
+    "startTime": "15:00",
+    "durationMins": 120,
+    "location": "Conference room",
+    "description": ""
+  }
+}
 `;
 
 export async function parseUserMessage(message, userProfile) {
