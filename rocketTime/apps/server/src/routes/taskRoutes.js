@@ -15,10 +15,10 @@ const requireAuth = (req, res, next) => {
 };
 
 // GET /api/calendar/goals - Get all goals for the authenticated user
-router.get('/goals', requireAuth, async (req, res, next) => {
+router.get('/:userId', async (req, res, next) => {
   try {
-    const userId = req.session.userId;
-    const { status, category, limit = 50, offset = 0 } = req.query;
+    //const userId = req.session.userId;
+   // const { status, category, limit = 50, offset = 0 } = req.query;
     
     let sql = 'SELECT * FROM goals WHERE user_id = ?';
     const params = [userId];

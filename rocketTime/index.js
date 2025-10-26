@@ -10,6 +10,8 @@ import calendar from './apps/server/src/routes/taskRoutes.js';
 import db from './apps/server/src/services/db.js';
 import getLogRouter from './apps/server/src/routes/getLogRoute.js';
 import addLogRouter from './apps/server/src/routes/addLogRoute.js';
+import deleteLogRouter from './apps/server/src/routes/deleteLogRoute.js';
+
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
@@ -25,6 +27,7 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.use('/getLog', getLogRouter);
 
 app.use('/addLog', addLogRouter);
+app.use('/deleteLog', deleteLogRouter);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
