@@ -80,7 +80,7 @@ export function AuthPage({ onLogin }: AuthPageProps) {
     <div className="min-h-screen bg-gradient-to-br from-purple-100 via-orange-50 to-yellow-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl mb-2">🪙 CoinTime Dashboard</h1>
+          <h1 className="text-4xl mb-2">🪙 RocketTime Dashboard</h1>
           <p className="text-muted-foreground">
             Track your time, earn coins, achieve your goals!
           </p>
