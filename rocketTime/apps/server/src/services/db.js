@@ -3,7 +3,7 @@ import 'dotenv/config';
 
 export const pool = mysql.createPool({
   host: process.env.MYSQL_HOST,
-  port: Number(process.env.MYSQL_PORT || 3306),
+  port: Number(process.env.MYSQL_PORT || 3000),
   user: process.env.MYSQL_USER,
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DB,
@@ -12,8 +12,9 @@ export const pool = mysql.createPool({
 });
 
 // Convenience query helper (prepared statements)
-async function query(sql, params = []) {
-  return pool.execute(sql, params);
+export async function query(sql, params = []) {
+  const [results] = await pool.execute(sql, params);
+  return results;
 }
 
-module.exports = { pool, query };
+export default {query};

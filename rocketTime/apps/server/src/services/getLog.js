@@ -21,6 +21,4 @@ export async function getTimeLogs(userId){
         console.error('Error getting time logs: ', err);
         throw err;
     }
-}
-
-export default getTimeLogs;
+};

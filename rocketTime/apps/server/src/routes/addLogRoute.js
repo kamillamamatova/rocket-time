@@ -4,13 +4,12 @@ import { getTimeLogs } from '../services/getLog.js';
 const router = express.Router();
 
 //direct to path below
-router.get('/:userId', async (req, res) => {
+router.get('/:userId', async function(req, res, next) {
   try {
-    const data = await getTimeLogs(req.params.userId);
-    res.json(data);
+    res.json(await getTimeLogs(req.params.userId));
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    console.error(`Error while getting time logs`, err.message);
+    next(err);
   }
 });
 

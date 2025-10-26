@@ -3,12 +3,12 @@ import cors from 'cors';
 import session from 'cookie-session';
 import 'dotenv/config';
 
-import auth from './rocketTime/apps/server/src/routes/auth.js';
-import agent from './rocketTime/apps/server/src/routes/chatRoute.js';
-import calendar from './rocketTime/apps/server/src/routes/taskRoutes.js';
+import auth from './apps/server/src/routes/auth.js';
+import agent from './apps/server/src/routes/chatRoute.js';
+import calendar from './apps/server/src/routes/taskRoutes.js';
 
-import {query} from './rocketTime/apps/server/src/services/db.js';
-import getLogRouter from './rocketTime/apps/server/src/routes/getLogRoute.js';
+import db from './apps/server/src/services/db.js';
+import getLogRouter from './apps/server/src/routes/getLogRoute.js';
 
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
@@ -31,7 +31,7 @@ app.use((err, _req, res, _next) => {
 
 app.get('/db-test', async (req, res) => {
   try {
-    const results = await query('SELECT NOW() AS currentTime');
+    const results = await db.query('SELECT NOW() AS currentTime');
     res.json({ status: 'DB Connected!', time: results[0].currentTime });
   } catch (err) {
     res.status(500).json({ error: err.message });
