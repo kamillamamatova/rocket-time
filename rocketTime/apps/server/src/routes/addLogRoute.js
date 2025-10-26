@@ -1,14 +1,14 @@
 import express from 'express';
-import { getTimeLogs } from '../services/getLog.js';
+import { addTimeLogs } from '../services/addLog.js';
 
 const router = express.Router();
 
 //direct to path below
-router.get('/:userId', async function(req, res, next) {
+router.post('/', async function(req, res, next) {
   try {
-    res.json(await getTimeLogs(req.params.userId));
+    res.json(await addTimeLogs(req.body));
   } catch (err) {
-    console.error(`Error while getting time logs`, err.message);
+    console.error(`Error while adding time logs`, err.message);
     next(err);
   }
 });

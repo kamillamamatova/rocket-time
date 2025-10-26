@@ -1,20 +1,25 @@
 import db from './db.js'; // import database
 
 //get one user' log
-export async function addTimeLogs(userId){
+export async function addTimeLogs(logbody){
     try{
-        const rows = await db.query(
+        const result = await db.query(
             ` INSERT INTO timelogs(user_id, goal_id, date, duration_hr, category, title)
       VALUES (?, ?, ?, ?, ?, ?)`,
-            [user_id, goal_id, date, duration_hr, category, title]
+            [logbody.user_id, logbody.goal_id, logbody.date, 
+                logbody.duration_hr, logbody.category, 
+                logbody.title]
         );
 
-        // if no logs found
-        if (!rows.length) {
-            return { message: 'Time log added successfully' };
+        let message = 'Error in creating time log';
+
+        if (result.affectedRows) {
+            message = 'Log created successfully';
         }
 
-        return { timelogs: rows };
+        return {
+            message:'Log created successfully'
+        };
 
     } catch(err){
         console.error('Error adding time logs: ', err);
@@ -22,4 +27,4 @@ export async function addTimeLogs(userId){
     }
 }
 
-export default getTimeLogs;
+export default addTimeLogs;
