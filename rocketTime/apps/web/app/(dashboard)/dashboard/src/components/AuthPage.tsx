@@ -172,9 +172,6 @@ export function AuthPage({ onLogin }: AuthPageProps) {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          Demo app - Data is stored locally in your browser
-        </p>
       </div>
     </div>
   );

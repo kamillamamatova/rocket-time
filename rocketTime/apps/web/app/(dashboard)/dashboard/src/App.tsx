@@ -194,7 +194,7 @@ export default function App() {
     if (entry.goalId) {
       setGoals((prev) =>
         prev.map((goal) =>
-          goal.id === entry.goalId
+          goal.id === entry.goalId?.toLowerCase()
             ? { ...goal, currentHours: goal.currentHours + entry.duration }
             : goal
         )
