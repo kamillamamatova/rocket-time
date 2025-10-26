@@ -11,6 +11,7 @@ import db from './apps/server/src/services/db.js';
 import getLogRouter from './apps/server/src/routes/getLogRoute.js';
 import getGoalRouter from './apps/server/src/routes/getGoalRoute.js';
 import addLogRouter from './apps/server/src/routes/addLogRoute.js';
+import addGoalRouter from './apps/server/src/routes/addGoalRoute.js';
 import deleteLogRouter from './apps/server/src/routes/deleteLogRoute.js';
 import deleteGoalRouter from './apps/server/src/routes/deleteGoalRoute.js';
 const app = express();
@@ -28,7 +29,10 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.use('/getLog', getLogRouter);
 app.use('/getGoal', getGoalRouter);
 
+// Adds
 app.use('/addLog', addLogRouter);
+app.use('/addGoals', addGoalRouter);
+
 app.use('/deleteLog', deleteLogRouter);
 app.use('/deleteGoal', deleteGoalRouter);
 
