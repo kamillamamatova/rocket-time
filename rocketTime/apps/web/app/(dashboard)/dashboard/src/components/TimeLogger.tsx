@@ -32,7 +32,7 @@ export function TimeLogger({ onAddEntry, goals }: TimeLoggerProps) {
   const [duration, setDuration] = useState("");
   const [goalId, setGoalId] = useState<string>("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!activity || !category || !duration) {
@@ -52,6 +52,36 @@ export function TimeLogger({ onAddEntry, goals }: TimeLoggerProps) {
       duration: durationNum,
       goalId: goalId || undefined,
     });
+
+    const newLog = {
+      user_id: "1", // HARD CODED FOR RN-----------------------------------------------------
+      goal_id: goalId || null,
+      date: new Date().toISOString(),
+      duration_hr: parseFloat(duration),
+      category: category,
+      title: activity
+    };
+
+    try {
+      const response = await fetch("http://localhost:3001/addLog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newLog),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(`${activity} logged successfully!`);
+        console.log("Log saved:", data);
+      } else {
+        toast.error("Failed to save log");
+        console.error("Error:", data);
+      }
+    } catch (err) {
+      console.error("Error saving log:", err);
+      toast.error("Server error while saving log");
+    }
 
     toast.success(`Logged ${durationNum}h for ${activity}`);
     setActivity("");

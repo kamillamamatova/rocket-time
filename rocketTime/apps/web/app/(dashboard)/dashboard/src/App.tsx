@@ -44,7 +44,12 @@ export default function App() {
   });
 
   const calculateCoins = (duration: number, category: string): number => {
-    const rate = coinRates[category] || 0;
+    const normalized = category.trim().toLowerCase();
+    const rate =
+      normalized === "time wasted"
+        ? coinRates["wasted"]
+        : coinRates[normalized] || 0;
+
     return duration * rate;
   };
 
@@ -62,13 +67,16 @@ export default function App() {
 
     const loadUserData = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/services/getLog/${currentUser}`);
+        const res = await fetch(`http://localhost:3001/getLog/1`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+
         if (!res.ok) throw new Error("Failed to fetch time logs");
 
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
-        if (data.timelogs) {
-          // Transform to your frontend structure if needed
+        if (data.timelogs && Array.isArray(data.timelogs)) {
           const formatted = data.timelogs.map((log: any) => ({
             id: log.id.toString(),
             activity: log.title,
@@ -77,9 +85,12 @@ export default function App() {
             date: log.date,
             goalId: log.goal_id || undefined,
           }));
+
+          // Replace instead of append
           setTimeEntries(formatted);
         } else {
           console.log(data.message || "No logs found for this user.");
+          setTimeEntries([]); // Clear entries if none found
         }
 
       } catch (err) {
@@ -87,26 +98,27 @@ export default function App() {
       }
     };
 
-    loadUserData();
-
+    // Load localStorage data first
     const userKey = `user_${currentUser}`;
     const savedGoals = localStorage.getItem(`${userKey}_goals`);
     const savedTasks = localStorage.getItem(`${userKey}_tasks`);
     const savedRates = localStorage.getItem(`${userKey}_coinRates`);
     const savedGoogleConnect = localStorage.getItem(`${userKey}_isGoogleConnected`);
-    if (savedGoals) {
-      setGoals(JSON.parse(savedGoals));
+    const savedEntries = localStorage.getItem(`${userKey}_timeEntries`);
+
+    if (savedEntries) {
+      setTimeEntries(JSON.parse(savedEntries));
     }
-    if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
-    }
-    if (savedRates) {
-      setCoinRates(JSON.parse(savedRates));
-    }
-    if (savedGoogleConnect) {
-      setIsGoogleConnected(JSON.parse(savedGoogleConnect));
-    }
+
+    if (savedGoals) setGoals(JSON.parse(savedGoals));
+    if (savedTasks) setTasks(JSON.parse(savedTasks));
+    if (savedRates) setCoinRates(JSON.parse(savedRates));
+    if (savedGoogleConnect) setIsGoogleConnected(JSON.parse(savedGoogleConnect));
+
+    // Then refresh from backend
+    loadUserData();
   }, [currentUser]);
+
 
   // Save to localStorage whenever data changes (user-specific)
   useEffect(() => {
@@ -173,23 +185,47 @@ export default function App() {
     setGoals((prev) => prev.filter((g) => g.id !== id));
   };
 
-  const handleDeleteEntry = (id: string) => {
-    const entryToDelete = timeEntries.find((e) => e.id === id);
-    if (!entryToDelete) return;
+  const handleDeleteEntry = async (id: string) => {
+    try {
+      // Delete on the server
+      const res = await fetch(`http://localhost:3001/deleteLog/1`, { //-----------------------------
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
 
-    // Update goal progress if entry was linked to a goal
-    if (entryToDelete.goalId) {
-      setGoals((prev) =>
-        prev.map((goal) =>
-          goal.id === entryToDelete.goalId
-            ? { ...goal, currentHours: Math.max(0, goal.currentHours - entryToDelete.duration) }
-            : goal
-        )
-      );
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Server failed to delete entry:", errText);
+        throw new Error("Failed to delete entry on server");
+      }
+
+      const data = await res.json();
+      console.log("Delete response:", data);
+
+      // Update frontend state
+      const entryToDelete = timeEntries.find((e) => e.id === id);
+      if (!entryToDelete) return;
+
+      // Update goal progress if entry was linked to a goal
+      if (entryToDelete.goalId) {
+        setGoals((prev) =>
+          prev.map((goal) =>
+            goal.id === entryToDelete.goalId
+              ? { ...goal, currentHours: Math.max(0, goal.currentHours - entryToDelete.duration) }
+              : goal
+          )
+        );
+      }
+
+      // Remove entry from local state
+      setTimeEntries((prev) => prev.filter((e) => e.id !== id));
+
+      console.log("Entry deleted successfully");
+
+    } catch (err) {
+      console.error("Error deleting time entry:", err);
     }
 
-    // Remove the entry
-    setTimeEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
   const handleAddTask = (task: Omit<Task, "id" | "date">) => {
@@ -544,7 +580,7 @@ export default function App() {
             </div>
 
             <RecentTransactions
-              entries={weekEntries}
+              entries={timeEntries}
               goals={goals}
               calculateCoins={calculateCoins}
               onDeleteEntry={handleDeleteEntry}
