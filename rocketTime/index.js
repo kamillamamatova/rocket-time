@@ -9,6 +9,7 @@ import calendar from './apps/server/src/routes/taskRoutes.js';
 
 import db from './apps/server/src/services/db.js';
 import getLogRouter from './apps/server/src/routes/getLogRoute.js';
+import getGoalRouter from './apps/server/src/routes/getGoalRoute.js';
 import addLogRouter from './apps/server/src/routes/addLogRoute.js';
 import deleteLogRouter from './apps/server/src/routes/deleteLogRoute.js';
 
@@ -23,8 +24,9 @@ app.use('/api/calendar', calendar);
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
-//call getLog.js
+//call get
 app.use('/getLog', getLogRouter);
+app.use('/getGoal', getGoalRouter);
 
 app.use('/addLog', addLogRouter);
 app.use('/deleteLog', deleteLogRouter);
