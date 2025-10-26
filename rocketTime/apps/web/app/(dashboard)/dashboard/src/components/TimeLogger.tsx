@@ -171,7 +171,7 @@ export function TimeLogger({ onAddEntry, goals }: TimeLoggerProps) {
                 <SelectContent>
                   <SelectItem value="none">No goal</SelectItem>
                   {goals.map((goal) => (
-                    <SelectItem key={goal.id} value={goal.id}>
+                    <SelectItem key={String(goal.id)} value={String(goal.id)}>
                       {goal.name}
                     </SelectItem>
                   ))}
