@@ -3,11 +3,10 @@ import db from './db.js';
 export async function addGoals(logbody){
     try{
         const result = await db.query(
-            ` INSERT INTO goals(user_id, title, target_hours, category, deadline, progress_hours, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [logbody.user_id, logbody.title, logbody.hours, 
-                logbody.category, logbody.deadline, logbody.progress_hours,
-                logbody.status]
+            ` INSERT INTO goals(user_id, title, target_hours, category, deadline)
+      VALUES (?, ?, ?, ?, ?)`,
+            [logbody.user_id, logbody.title, logbody.target_hours, 
+                logbody.category, logbody.deadline]
         );
 
         let message = 'Error in creating time log';

@@ -109,15 +109,47 @@ export function TaskManager({
     setCompletionCategory("");
   };
 
-  const completeTask = (taskId: string) => {
+  const completeTask = async (taskId: string) => {
     if (!completionDuration || isNaN(parseFloat(completionDuration)) || parseFloat(completionDuration) <= 0) {
       toast.error("Please enter a valid duration");
       return;
     }
+  
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+  
+    // Call parent handler to update status, log time entry, and update goal
+    try {
+      // Call your Log Time API
+      const res = await fetch("http://localhost:3001/addLog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: task.title,
+          category: completionCategory,
+          duration_hr: parseFloat(completionDuration),
+          goal_id: task.goalId || null,
+          user_id: 1, // replace with dynamic user ID
+          date: new Date(),
+        }),
+      });
 
-    onUpdateTaskStatus(taskId, "complete", parseFloat(completionDuration), completionCategory);
-    toast.success("Task completed and logged!");
-    cancelCompletion();
+      if (!res.ok) {
+        const errText = await res.text();
+        console.error("Failed to log task time:", errText);
+        toast.error("Failed to log task time");
+        return;
+      }
+  
+       toast.success("Task completed and logged!");
+       await onUpdateTaskStatus(taskId, "complete", parseFloat(completionDuration), completionCategory/*, task.goalId*/);
+
+      cancelCompletion();
+    } catch (err) {
+      console.error("Error logging task time:", err);
+      toast.error("Error logging task time");
+    }
+   
   };
 
   const handleAttempted = (taskId: string) => {

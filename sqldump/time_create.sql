@@ -48,15 +48,24 @@ CREATE TABLE timelogs (
 	id INT NOT NULL AUTO_INCREMENT,
     user_id INT NOT NULL,
     goal_id INT,
-    date DATE,
+    date DATETIME DEFAULT CURRENT_TIMESTAMP,
 	duration_hr FLOAT,
-	category ENUM('productive', 'learning', 'excercise','social', 'hobbies', 'time wasted'),
+	category ENUM('productive', 'learning', 'exercise','social', 'hobbies', 'time wasted'),
    title VARCHAR(200),
     PRIMARY KEY (id, user_id),
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE CASCADE
 
 )ENGINE=InnoDB;
+
+
+INSERT INTO timelogs(user_id, goal_id, date, duration_hr,category, title)
+VALUES
+(1,1,'2025-9-20 14:30:00', 5.5, 'learning', 'Learning basic words for asl'),
+(1,NULL,'2025-9-2 14:30:00', 1,'time wasted', 'Doom scrolling'),
+(1,NULL,'2025-3-1 14:30:00', 1,'social', 'Hosting brunch'),
+(1,NULL,'2025-4-20 14:30:00', 1,'hobbies', 'Knitting'),
+(1,3,'2025-10-20 4:30:00', 2.1, 'productive', '');
 
 -- Create OAuth credentials table
 CREATE TABLE oauth_credentials (
@@ -72,12 +81,3 @@ CREATE TABLE oauth_credentials (
   UNIQUE KEY unique_user_oauth (user_id),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
-
-
-INSERT INTO timelogs(user_id, goal_id, date, duration_hr,category, title)
-VALUES
-(1,1,'2025-9-20', 5.5, 'learning', 'Learning basic words for asl'),
-(1,NULL,'2025-9-2', 1,'time wasted', 'Doom scrolling'),
-(1,NULL,'2025-3-1', 1,'social', 'Hosting brunch'),
-(1,NULL,'2025-4-20', 1,'hobbies', 'Knitting'),
-(1,3,'2025-10-20', 2.1, 'productive', '');

@@ -91,7 +91,7 @@ export function RecentTransactions({
         <div className="space-y-3">
           {recentEntries.map((entry) => {
             const coins = calculateCoins(entry.duration, entry.category);
-            const linkedGoal = entry.goalId ? goals.find((g) => g.id === entry.goalId) : null;
+            const linkedGoal = entry.goalId ? goals.find((g) => g.id.toString() === entry.goalId.toString()) : null;
             const categoryType = getCategoryType(entry.category);
             const isPositive = coins >= 0;
 

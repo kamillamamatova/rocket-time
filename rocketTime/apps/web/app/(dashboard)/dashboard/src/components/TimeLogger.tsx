@@ -53,10 +53,28 @@ export function TimeLogger({ onAddEntry, goals }: TimeLoggerProps) {
       goalId: goalId || undefined,
     });
 
+    const formatDateForMySQL = (date: Date | string): string => {
+      const d = new Date(date);
+      const pad = (n: number): string => (n < 10 ? "0" + n : n.toString());
+      return (
+        d.getFullYear() +
+        "-" +
+        pad(d.getMonth() + 1) +
+        "-" +
+        pad(d.getDate()) +
+        " " +
+        pad(d.getHours()) +
+        ":" +
+        pad(d.getMinutes()) +
+        ":" +
+        pad(d.getSeconds())
+      );
+    };
+
     const newLog = {
       user_id: "1", // HARD CODED FOR RN-----------------------------------------------------
       goal_id: goalId || null,
-      date: new Date().toISOString(),
+      date: formatDateForMySQL(new Date()),
       duration_hr: parseFloat(duration),
       category: category,
       title: activity
@@ -153,7 +171,7 @@ export function TimeLogger({ onAddEntry, goals }: TimeLoggerProps) {
                 <SelectContent>
                   <SelectItem value="none">No goal</SelectItem>
                   {goals.map((goal) => (
-                    <SelectItem key={goal.id} value={goal.id}>
+                    <SelectItem key={String(goal.id)} value={String(goal.id)}>
                       {goal.name}
                     </SelectItem>
                   ))}
