@@ -113,7 +113,7 @@ export default function App() {
         if (data.goals && Array.isArray(data.goals)) {
           const formattedGoals = data.goals.map((g: any) => ({
             id: g.id,
-            title: g.title,
+            name: g.title,
             targetHours: g.target_hours,
             currentHours: g.progress_hours,
             category: g.category,

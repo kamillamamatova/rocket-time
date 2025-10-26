@@ -50,7 +50,7 @@ CREATE TABLE timelogs (
     goal_id INT,
     date DATETIME DEFAULT CURRENT_TIMESTAMP,
 	duration_hr FLOAT,
-	category ENUM('productive', 'learning', 'excercise','social', 'hobbies', 'time wasted'),
+	category ENUM('productive', 'learning', 'exercise','social', 'hobbies', 'time wasted'),
    title VARCHAR(200),
     PRIMARY KEY (id, user_id),
 	FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

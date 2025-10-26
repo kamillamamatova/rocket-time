@@ -4,7 +4,7 @@ import db from './db.js'; // import database
 export async function addTimeLogs(logbody){
     try{
         const date=new Date(logbody.date);
-        const mysqldate=date.toISOString().slice(0,19).reaplce("T", " ");
+        const mysqldate=date.toISOString().slice(0,19).replace("T", " ");
         const result = await db.query(
             ` INSERT INTO timelogs(user_id, goal_id, date, duration_hr, category, title)
       VALUES (?, ?, ?, ?, ?, ?)`,
