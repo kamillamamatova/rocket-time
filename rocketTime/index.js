@@ -12,7 +12,7 @@ import getLogRouter from './apps/server/src/routes/getLogRoute.js';
 import getGoalRouter from './apps/server/src/routes/getGoalRoute.js';
 import addLogRouter from './apps/server/src/routes/addLogRoute.js';
 import deleteLogRouter from './apps/server/src/routes/deleteLogRoute.js';
-
+import deleteGoalRouter from './apps/server/src/routes/deleteGoalRoute.js';
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
@@ -30,6 +30,7 @@ app.use('/getGoal', getGoalRouter);
 
 app.use('/addLog', addLogRouter);
 app.use('/deleteLog', deleteLogRouter);
+app.use('/deleteGoal', deleteGoalRouter);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
