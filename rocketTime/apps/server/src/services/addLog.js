@@ -12,6 +12,21 @@ export async function addTimeLogs(logbody){
                 logbody.duration_hr, logbody.category, 
                 logbody.title]
         );
+        if(!logbody.goal_id){
+            const result2= await db.query(
+           `UPDATE goals
+            SET 
+            progress_hours = progress_hours + ?,
+            status = CASE
+                WHEN progress_hours + ? >= target_hours THEN 'completed'
+                WHEN status = 'not started' THEN 'in progress'
+                ELSE status
+            END
+            WHERE id = ? AND user_id = ?`,
+            [logbody.duration_hr, logbody.duration_hr, logbody.goal_id, logbody.user_id]
+            );
+        }
+        
 
         let message = 'Error in creating time log';
 
