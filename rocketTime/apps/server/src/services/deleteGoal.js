@@ -1,6 +1,6 @@
 import db from './db.js'; // import database
 
-export async function deleteTimeLogs(timelog_Id){
+export async function deleteGoal(timelog_Id){
   try {
     
     const result = await db.query(
@@ -18,4 +18,4 @@ export async function deleteTimeLogs(timelog_Id){
   }
 };
 
-export default deleteTimeLogs;
+export default deleteGoal;
