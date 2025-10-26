@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+      // ... other options ...
+  
+      "target": "ESNext",         // Use a modern target
+      "module": "ESNext",         // Use modern modules
+      "moduleResolution": "Node", // Or "Bundler" or "NodeNext"
+      "jsx": "react-jsx",         // Use the modern JSX transform
+  
+      // Recommended base options for Vite + React + TS
+      "lib": ["DOM", "DOM.Iterable", "ESNext"],
+      "allowJs": true,
+      "skipLibCheck": true,
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "strict": true,
+      "forceConsistentCasingInFileNames": true,
+      "resolveJsonModule": true,
+      "isolatedModules": true,
+      "noEmit": true, // Vite handles emission
+  
+      // ... potentially other options like paths, baseUrl ...
+    },
+    "include": ["src"], // Make sure it includes your source directory
+    "references": [{ "path": "./tsconfig.node.json" }] // Often needed for Vite config file itself
+  }
