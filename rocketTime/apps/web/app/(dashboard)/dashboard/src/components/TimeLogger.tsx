@@ -10,7 +10,7 @@ import { toast } from "sonner";
 interface TimeEntry {
   id: string;
   activity: string;
-  category: "Productive" | "Hobbies" | "Time Wasted" | "Learning" | "Social" | "Exercise";
+  category: "productive" | "hobbies" | "wasted" | "learning" | "social" | "exercise";
   duration: number;
   date: string;
   goalId?: string;
@@ -27,6 +27,7 @@ interface TimeLoggerProps {
 }
 
 export function TimeLogger({ onAddEntry, goals }: TimeLoggerProps) {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
   const [activity, setActivity] = useState("");
   const [category, setCategory] = useState("");
   const [duration, setDuration] = useState("");
@@ -72,8 +73,7 @@ export function TimeLogger({ onAddEntry, goals }: TimeLoggerProps) {
     };
 
     const newLog = {
-      user_id: "1", // HARD CODED FOR RN-----------------------------------------------------
-      goal_id: goalId || null,
+      goal_id: goalId && goalId !== "none" ? goalId : null,
       date: formatDateForMySQL(new Date()),
       duration_hr: parseFloat(duration),
       category: category,
@@ -81,9 +81,10 @@ export function TimeLogger({ onAddEntry, goals }: TimeLoggerProps) {
     };
 
     try {
-      const response = await fetch("http://localhost:3001/addLog", {
+      const response = await fetch(`${API_URL}/addLog`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(newLog),
       });
 

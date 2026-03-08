@@ -126,6 +126,21 @@ router.get('/me', async (req, res) => {
   }
 });
 
+// Backward-compatible alias
+router.get('/user', async (req, res) => {
+  try {
+    if (!req.session || !req.session.userId) {
+      return res.json({ user: null });
+    }
+    const users = await query('SELECT id, first_name, last_name, email FROM users WHERE id = ?', [req.session.userId]);
+    const user = users[0] || null;
+    res.json({ user });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({ error: 'Failed to get user info' });
+  }
+});
+
 // Logout
 router.post('/logout', (req, res) => {
   if (req.session) {

@@ -6,6 +6,8 @@
       "module": "ESNext",         // Use modern modules
       "moduleResolution": "Node", // Or "Bundler" or "NodeNext"
       "jsx": "react-jsx",         // Use the modern JSX transform
+
+      "allowImportingTsExtensions": true,
   
       // Recommended base options for Vite + React + TS
       "lib": ["DOM", "DOM.Iterable", "ESNext"],

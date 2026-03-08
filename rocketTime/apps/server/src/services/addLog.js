@@ -12,8 +12,8 @@ export async function addTimeLogs(logbody){
                 logbody.duration_hr, logbody.category, 
                 logbody.title]
         );
-        if(!logbody.goal_id){
-            const result2= await db.query(
+        if(logbody.goal_id){
+            await db.query(
            `UPDATE goals
             SET 
             progress_hours = progress_hours + ?,
@@ -26,14 +26,10 @@ export async function addTimeLogs(logbody){
             [logbody.duration_hr, logbody.duration_hr, logbody.goal_id, logbody.user_id]
             );
         }
-        
 
-        let message = 'Error in creating time log';
-
-        if (result.affectedRows) {
-            message = 'Log created successfully';
+        if (!result.affectedRows) {
+            throw new Error('Error creating time log');
         }
-
         return {
             message:'Log created successfully'
         };

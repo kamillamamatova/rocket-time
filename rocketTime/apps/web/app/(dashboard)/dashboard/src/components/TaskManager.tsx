@@ -37,6 +37,7 @@ export function TaskManager({
   onEditTask,
   isGoogleConnected 
 }: TaskManagerProps) {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
   const [taskTitle, setTaskTitle] = useState("");
   const [goalId, setGoalId] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -121,15 +122,15 @@ export function TaskManager({
     // Call parent handler to update status, log time entry, and update goal
     try {
       // Call your Log Time API
-      const res = await fetch("http://localhost:3001/addLog", {
+      const res = await fetch(`${API_URL}/addLog`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           title: task.title,
           category: completionCategory,
           duration_hr: parseFloat(completionDuration),
           goal_id: task.goalId || null,
-          user_id: 1, // replace with dynamic user ID
           date: new Date(),
         }),
       });

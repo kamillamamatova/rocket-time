@@ -17,18 +17,19 @@ import { Button } from "./components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./components/ui/alert-dialog";
 import { LayoutDashboard, Clock, Target, TrendingUp, Lightbulb, Settings, LogOut } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
+import { useUser } from './context/UserContext';
 
 interface TimeEntry {
   id: string;
   activity: string;
-  category: "Productive" | "Hobbies" | "Time Wasted" | "Learning" | "Social" | "Exercise";
+  category: "productive" | "hobbies" | "wasted" | "time wasted" | "learning" | "social" | "exercise";
   duration: number;
   date: string;
   goalId?: string;
 }
 
 export default function App() {
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const { user, isAuthenticated, isLoading } = useUser();
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -43,67 +44,34 @@ export default function App() {
     wasted: -30,
   });
 
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
   const calculateCoins = (duration: number, category: string): number => {
     const normalized = category.trim().toLowerCase();
     const rate =
-      normalized === "time wasted"
+      normalized === "time wasted" || normalized === "wasted"
         ? coinRates["wasted"]
         : coinRates[normalized] || 0;
 
     return duration * rate;
   };
 
-  // Check for saved session on mount and verify auth with server
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // First check if user is authenticated on the server
-        console.log("Hello?")
-        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/me`, {
-          credentials: 'include'
-        });
-
-        console.log("Response: ", response)
-        
-        if (response.ok) {
-          const data = await response.json();
-          console.log("Data: ", data)
-          if (data.user) {
-            // User is authenticated on server
-            const username = data.user.email || data.user.first_name || data.user.id;
-            setCurrentUser(username);
-            localStorage.setItem("currentUser", username);
-            localStorage.setItem("currentUserInfo", JSON.stringify(data.user));
-          }
-        } else {
-          // If not authenticated on server, check localStorage for local session
-          const savedUser = localStorage.getItem("currentUser");
-          if (savedUser) {
-            setCurrentUser(savedUser);
-          }
-        }
-      } catch (error) {
-        console.error('Error checking auth status:', error);
-        // Fallback to localStorage for local-only sessions
-        const savedUser = localStorage.getItem("currentUser");
-        if (savedUser) {
-          setCurrentUser(savedUser);
-        }
-      }
-    };
-
-    checkAuth();
-  }, []);
-
   // Load user-specific data when user logs in
   useEffect(() => {
-    if (!currentUser) return;
+    if (!user) {
+  // If user logs out, clear their data
+  setTimeEntries([]);
+  setGoals([]);
+  setTasks([]);
+  return;
+}
 
     const loadUserData = async () => {
       try {
-        const res = await fetch(`http://localhost:3001/getLog/1`, {
+        const res = await fetch(`${API_URL}/getLog/${user.id}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
+          credentials: 'include', // <-- Add this line to send cookies
         });
 
         if (!res.ok) throw new Error("Failed to fetch time logs");
@@ -135,9 +103,10 @@ export default function App() {
     const loadUserGoals = async () => {
       try {
         //const res = await fetch(`http://localhost:3001/getGoal/${userId}`);----------------
-        const res = await fetch(`http://localhost:3001/getGoal/1`, {
+        const res = await fetch(`${API_URL}/getGoal/${user.id}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
+          credentials: 'include', // <-- Add this line to send cookies
         });
 
         const data = await res.json();
@@ -164,7 +133,7 @@ export default function App() {
     };
 
     // Load localStorage data first
-    const userKey = `user_${currentUser}`;
+    const userKey = `user_${user.id}`;
     const savedTasks = localStorage.getItem(`${userKey}_tasks`);
     const savedRates = localStorage.getItem(`${userKey}_coinRates`);
     const savedGoogleConnect = localStorage.getItem(`${userKey}_isGoogleConnected`);
@@ -181,7 +150,7 @@ export default function App() {
     // Then refresh from backend
     loadUserData();
     loadUserGoals();
-  }, [currentUser]);
+  }, [user]);
 
 
   // Save to localStorage whenever data changes (user-specific)
@@ -198,22 +167,22 @@ export default function App() {
   //}, [goals, currentUser]);
 
   useEffect(() => {
-    if (!currentUser) return;
-    const userKey = `user_${currentUser}`;
+    if (!user) return;
+    const userKey = `user_${user.id}`;
     localStorage.setItem(`${userKey}_tasks`, JSON.stringify(tasks));
-  }, [tasks, currentUser]);
+  }, [tasks, user]);
 
   useEffect(() => {
-    if (!currentUser) return;
-    const userKey = `user_${currentUser}`;
+    if (!user) return;
+    const userKey = `user_${user.id}`;
     localStorage.setItem(`${userKey}_coinRates`, JSON.stringify(coinRates));
-  }, [coinRates, currentUser]);
+  }, [coinRates, user]);
 
   useEffect(() => {
-    if (!currentUser) return;
-    const userKey = `user_${currentUser}`;
+    if (!user) return;
+    const userKey = `user_${user.id}`;
     localStorage.setItem(`${userKey}_isGoogleConnected`, JSON.stringify(isGoogleConnected));
-  }, [isGoogleConnected, currentUser]);
+  }, [isGoogleConnected, user]);
 
   const handleAddEntry = (entry: Omit<TimeEntry, "id" | "date">) => {
     const newEntry: TimeEntry = {
@@ -228,7 +197,7 @@ export default function App() {
     if (entry.goalId) {
       setGoals((prev) =>
         prev.map((goal) =>
-          goal.id === entry.goalId?.toLowerCase()
+          String(goal.id) === String(entry.goalId)
             ? { ...goal, currentHours: goal.currentHours + entry.duration }
             : goal
         )
@@ -247,8 +216,9 @@ export default function App() {
 
   const handleDeleteGoal = async (id: string) => {
     try {
-      const res = await fetch(`http://localhost:3001/deleteGoal/${id}`, {
+      const res = await fetch(`${API_URL}/deleteGoal/${id}`, {
         method: "DELETE",
+        credentials: "include",
       }); 
 
       const data = await res.json();  
@@ -269,9 +239,10 @@ export default function App() {
   const handleDeleteEntry = async (id: string) => {
     try {
       // Delete on the server
-      const res = await fetch(`http://localhost:3001/deleteLog/${id}`, { 
+      const res = await fetch(`${API_URL}/deleteLog/${id}`, { 
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -399,11 +370,17 @@ export default function App() {
   );
 
   const productiveHours = weekEntries
-    .filter((e) => e.category === "Productive" || e.category === "Learning")
+    .filter((e) => {
+      const c = e.category.trim().toLowerCase();
+      return c === "productive" || c === "learning";
+    })
     .reduce((sum, e) => sum + e.duration, 0);
 
   const wastedHours = weekEntries
-    .filter((e) => e.category === "Time Wasted")
+    .filter((e) => {
+      const c = e.category.trim().toLowerCase();
+      return c === "time wasted" || c === "wasted";
+    })
     .reduce((sum, e) => sum + e.duration, 0);
 
   // Calculate total coins deficit from overdue goals only
@@ -517,25 +494,10 @@ export default function App() {
     };
   });
 
-  const handleLogin = async (userInfo: any) => {
-    if (typeof userInfo === 'string') {
-      // Legacy support for old username-based auth
-      setCurrentUser(userInfo);
-      localStorage.setItem("currentUser", userInfo);
-    } else {
-      // OAuth user info
-      const username = userInfo.email || userInfo.first_name || userInfo.id;
-      setCurrentUser(username);
-      localStorage.setItem("currentUser", username);
-      // Store full user info for display
-      localStorage.setItem("currentUserInfo", JSON.stringify(userInfo));
-    }
-  };
-
   const handleLogout = async () => {
     try {
       // Call server logout endpoint
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/logout`, {
+      await fetch(`${API_URL}/auth/logout`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -543,31 +505,28 @@ export default function App() {
       console.error('Error logging out:', error);
     }
     
-    setCurrentUser(null);
-    localStorage.removeItem("currentUser");
-    localStorage.removeItem("currentUserInfo");
-    // Clear state
-    setTimeEntries([]);
-    setGoals([]);
-    setTasks([]);
-    setCoinRates({
-      productive: 50,
-      learning: 50,
-      exercise: 50,
-      social: 50,
-      hobbies: 20,
-      wasted: -30,
-    });
-    setIsGoogleConnected(false);
+    // Reload the page, which forces the UserContext to re-check auth
+    window.location.reload();
     setShowLogoutDialog(false);
   };
 
   // Show auth page if not logged in
-  if (!currentUser) {
+  // Show loading spinner while context is checking auth
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  // Show auth page if not logged in
+  if (!isAuthenticated) {
     return (
       <>
         <Toaster />
-        <AuthPage onLogin={handleLogin} />
+        {/* onLogin prop is no longer needed */}
+        <AuthPage />
       </>
     );
   }
@@ -591,20 +550,9 @@ export default function App() {
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Logged in as</p>
                 <p className="font-medium">
-                  {(() => {
-                    const userInfoStr = localStorage.getItem("currentUserInfo");
-                    if (userInfoStr) {
-                      try {
-                        const userInfo = JSON.parse(userInfoStr);
-                        return userInfo.first_name && userInfo.last_name 
-                          ? `${userInfo.first_name} ${userInfo.last_name}` 
-                          : userInfo.email || currentUser;
-                      } catch (e) {
-                        return currentUser;
-                      }
-                    }
-                    return currentUser;
-                  })()}
+                  {user.first_name && user.last_name
+                    ? `${user.first_name} ${user.last_name}`
+                    : user.email || user.id}
                 </p>
               </div>
               <Button 

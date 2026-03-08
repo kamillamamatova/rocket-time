@@ -6,7 +6,11 @@ const router = express.Router();
 //direct to path below
 router.post('/', async function(req, res, next) {
   try {
-    res.json(await addTimeLogs(req.body));
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+    const payload = { ...req.body, user_id: req.session.userId };
+    res.json(await addTimeLogs(payload));
   } catch (err) {
     console.error(`Error while adding time logs`, err.message);
     next(err);

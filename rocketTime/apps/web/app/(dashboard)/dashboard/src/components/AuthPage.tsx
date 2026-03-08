@@ -1,34 +1,13 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
-import { toast } from "sonner";
 
-interface AuthPageProps {
-  onLogin: (userInfo: any) => void;
-}
-
-export function AuthPage({ onLogin }: AuthPageProps) {
+export function AuthPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Check if user is already authenticated
-    checkAuthStatus();
+    // Auth is managed by UserContext, so this page only handles login redirect.
   }, []);
-
-  const checkAuthStatus = async () => {
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/me`, {
-        credentials: 'include'
-      });
-      const data = await response.json();
-      
-      if (data.user) {
-        onLogin(data.user);
-      }
-    } catch (error) {
-      console.error('Error checking auth status:', error);
-    }
-  };
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
