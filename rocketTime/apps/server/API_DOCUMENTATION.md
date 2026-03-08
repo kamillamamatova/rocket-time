@@ -5,7 +5,7 @@ This API provides endpoints for Google OAuth authentication, AI-powered chat fun
 
 ## Base URL
 ```
-http://localhost:3000
+http://localhost:3001
 ```
 
 ## Authentication
@@ -13,14 +13,14 @@ All routes except OAuth login require authentication via session cookies.
 
 ## Routes
 
-### Authentication Routes (`/api/auth`)
+### Authentication Routes (`/auth`)
 
-#### `GET /api/auth/login`
+#### `GET /auth/login`
 Initiates Google OAuth flow. Redirects user to Google's authorization page.
 
 **Response:** Redirects to Google OAuth
 
-#### `GET /api/auth/callback`
+#### `GET /auth/callback`
 Handles OAuth callback from Google. Creates or updates user account and stores OAuth credentials.
 
 **Query Parameters:**
@@ -28,7 +28,7 @@ Handles OAuth callback from Google. Creates or updates user account and stores O
 
 **Response:** Redirects to frontend URL
 
-#### `GET /api/auth/me`
+#### `GET /auth/me`
 Get current authenticated user information.
 
 **Response:**
@@ -43,7 +43,7 @@ Get current authenticated user information.
 }
 ```
 
-#### `POST /api/auth/logout`
+#### `POST /auth/logout`
 Logout current user and clear session.
 
 **Response:**
@@ -53,9 +53,9 @@ Logout current user and clear session.
 }
 ```
 
-### Chat Routes (`/api/agent`)
+### Chat Routes (`/agent`)
 
-#### `POST /api/agent/chat`
+#### `POST /agent/chat`
 Send a message to the AI assistant for processing.
 
 **Request Body:**
@@ -82,9 +82,9 @@ Send a message to the AI assistant for processing.
 - `ASK_FEEDBACK`: Provides productivity feedback and statistics
 - `SMALL_TALK`: General conversation
 
-### Goals/Tasks Routes (`/api/calendar`)
+### Goals/Tasks Routes (`/calendar`)
 
-#### `GET /api/calendar/goals`
+#### `GET /calendar/goals`
 Get all goals for the authenticated user.
 
 **Query Parameters:**
@@ -113,7 +113,7 @@ Get all goals for the authenticated user.
 }
 ```
 
-#### `GET /api/calendar/goals/:id`
+#### `GET /calendar/goals/:id`
 Get a specific goal by ID.
 
 **Response:**
@@ -134,7 +134,7 @@ Get a specific goal by ID.
 }
 ```
 
-#### `POST /api/calendar/goals`
+#### `POST /calendar/goals`
 Create a new goal.
 
 **Request Body:**
@@ -166,7 +166,7 @@ Create a new goal.
 }
 ```
 
-#### `PUT /api/calendar/goals/:id`
+#### `PUT /calendar/goals/:id`
 Update an existing goal.
 
 **Request Body:**
@@ -196,7 +196,7 @@ Update an existing goal.
 }
 ```
 
-#### `DELETE /api/calendar/goals/:id`
+#### `DELETE /calendar/goals/:id`
 Delete a goal.
 
 **Response:**
@@ -206,9 +206,9 @@ Delete a goal.
 }
 ```
 
-### Time Logs Routes (`/api/calendar`)
+### Time Logs Routes (`/calendar`)
 
-#### `GET /api/calendar/timelogs`
+#### `GET /calendar/timelogs`
 Get time logs for the authenticated user.
 
 **Query Parameters:**
@@ -237,7 +237,7 @@ Get time logs for the authenticated user.
 }
 ```
 
-#### `POST /api/calendar/timelogs`
+#### `POST /calendar/timelogs`
 Create a new time log.
 
 **Request Body:**
@@ -267,7 +267,7 @@ Create a new time log.
 }
 ```
 
-#### `PUT /api/calendar/timelogs/:id`
+#### `PUT /calendar/timelogs/:id`
 Update an existing time log.
 
 **Request Body:**
@@ -278,7 +278,7 @@ Update an existing time log.
 }
 ```
 
-#### `DELETE /api/calendar/timelogs/:id`
+#### `DELETE /calendar/timelogs/:id`
 Delete a time log.
 
 **Response:**
@@ -288,9 +288,9 @@ Delete a time log.
 }
 ```
 
-### Statistics Route (`/api/calendar`)
+### Statistics Route (`/calendar`)
 
-#### `GET /api/calendar/stats`
+#### `GET /calendar/stats`
 Get user productivity statistics.
 
 **Response:**
@@ -347,10 +347,15 @@ Required environment variables:
 ```env
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/auth/callback
+GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3001/auth/callback
 GOOGLE_API_KEY=your_google_ai_api_key
 SESSION_SECRET=your_session_secret
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:3000
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=your_mysql_user
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DB=time
 ```
 
 ## Database Setup
@@ -367,25 +372,25 @@ Run the migration script to set up the required database tables:
 
 ```javascript
 // Login
-window.location.href = '/api/auth/login';
+window.location.href = '/auth/login';
 
 // Check authentication status
-const response = await fetch('/api/auth/me');
+const response = await fetch('/auth/me');
 const { user } = await response.json();
 
 // Send chat message
-const chatResponse = await fetch('/api/agent/chat', {
+const chatResponse = await fetch('/agent/chat', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({ message: 'Create a meeting tomorrow at 2pm' })
 });
 
 // Get goals
-const goalsResponse = await fetch('/api/calendar/goals');
+const goalsResponse = await fetch('/calendar/goals');
 const { goals } = await goalsResponse.json();
 
 // Create a new goal
-const newGoal = await fetch('/api/calendar/goals', {
+const newGoal = await fetch('/calendar/goals', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({

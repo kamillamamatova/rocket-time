@@ -16,11 +16,22 @@ import deleteGoalRouter from './routes/deleteGoalRoute.js';
 
 const app = express();
 
-// --- CORS must allow your frontend origin and credentials ---
+const normalizeOrigin = (value) => value?.trim().replace(/\/+$/, '');
+const frontendOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
+  .split(',')
+  .map(normalizeOrigin)
+  .filter(Boolean);
+
 const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:3000',
-  'http://localhost:3000'
+  ...new Set([
+    ...frontendOrigins,
+    'http://localhost:3000',
+    'http://localhost:5173'
+  ])
 ];
+
+const isProduction = process.env.NODE_ENV === 'production';
+const cookieSameSite = process.env.COOKIE_SAME_SITE || (isProduction ? 'none' : 'lax');
 
 app.use(cors({
   origin: (origin, callback) => {
@@ -44,8 +55,8 @@ app.use(session({
   name: 'sid',
   keys: [process.env.SESSION_SECRET || 'dev'], // cookie-session expects keys[]
   maxAge: 30 * 24 * 60 * 60 * 1000,            // 30 days
-  sameSite: 'lax',                              // fine for OAuth redirect on localhost
-  secure: false,                                // set true in prod over HTTPS
+  sameSite: cookieSameSite,
+  secure: isProduction,
   httpOnly: true
 }));
 
@@ -79,4 +90,4 @@ app.get('/db-test', async (req, res) => {
 
 
 const port = process.env.PORT || 3001;
-app.listen(port, () => console.log(`Server listening on http://localhost:${port}`));
+app.listen(port, () => console.log(`Server listening on port ${port}`));

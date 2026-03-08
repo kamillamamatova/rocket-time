@@ -15,7 +15,7 @@ Add these environment variables to your `.env` file:
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID=your_google_client_id_here
 GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/auth/callback
+GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3001/auth/callback
 
 # Google AI API Key
 GOOGLE_API_KEY=your_google_ai_api_key_here
@@ -24,13 +24,14 @@ GOOGLE_API_KEY=your_google_ai_api_key_here
 SESSION_SECRET=your_random_session_secret_here
 
 # Frontend URL
-FRONTEND_URL=http://localhost:5173
+FRONTEND_URL=http://localhost:3000
 
 # Database Configuration (if not already set)
-DB_HOST=localhost
-DB_USER=KHacks
-DB_PASSWORD=hacking
-DB_NAME=time
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=your_mysql_user
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DB=time
 ```
 
 ### 2. Set Up Google Cloud Console
@@ -48,7 +49,7 @@ DB_NAME=time
    - Click "Create Credentials" > "OAuth 2.0 Client IDs"
    - Application type: "Web application"
    - Name: "Rocket Time OAuth"
-   - Authorized redirect URIs: `http://localhost:3000/api/auth/callback`
+   - Authorized redirect URIs: `http://localhost:3001/auth/callback`
    - Copy the Client ID and Client Secret to your `.env` file
 
 ### 3. Run Database Migration
@@ -104,19 +105,19 @@ npm run dev
 ### Step 2: Test OAuth Login Flow
 
 #### Method 1: Browser Testing (Recommended)
-1. **Open your browser** and go to: `http://localhost:3000/api/auth/login`
+1. **Open your browser** and go to: `http://localhost:3001/auth/login`
 2. **You should be redirected** to Google's OAuth consent screen
 3. **Sign in with your Google account**
 4. **Grant permissions** for the requested scopes
-5. **You should be redirected back** to your frontend URL (`http://localhost:5173`)
+5. **You should be redirected back** to your frontend URL (`http://localhost:3000`)
 
 #### Method 2: Using curl/Postman
 ```bash
 # Test login endpoint (will redirect to Google)
-curl -i http://localhost:3000/api/auth/login
+curl -i http://localhost:3001/auth/login
 
 # Test callback endpoint (after getting auth code from Google)
-curl -i "http://localhost:3000/api/auth/callback?code=AUTH_CODE_FROM_GOOGLE"
+curl -i "http://localhost:3001/auth/callback?code=AUTH_CODE_FROM_GOOGLE"
 ```
 
 ### Step 3: Test Authentication Status
@@ -124,7 +125,7 @@ After successful login, test if you're authenticated:
 
 ```bash
 # Test /me endpoint
-curl -i -b cookies.txt -c cookies.txt http://localhost:3000/api/auth/me
+curl -i -b cookies.txt -c cookies.txt http://localhost:3001/auth/me
 ```
 
 ### Step 4: Test Protected Routes
@@ -132,19 +133,19 @@ Once authenticated, test protected endpoints:
 
 ```bash
 # Test goals endpoint
-curl -i -b cookies.txt http://localhost:3000/api/calendar/goals
+curl -i -b cookies.txt http://localhost:3001/calendar/goals
 
 # Test chat endpoint
 curl -i -b cookies.txt -X POST \
   -H "Content-Type: application/json" \
   -d '{"message":"Hello, can you help me plan my day?"}' \
-  http://localhost:3000/api/agent/chat
+  http://localhost:3001/agent/chat
 ```
 
 ### Step 5: Test Logout
 ```bash
 # Test logout
-curl -i -b cookies.txt -X POST http://localhost:3000/api/auth/logout
+curl -i -b cookies.txt -X POST http://localhost:3001/auth/logout
 ```
 
 ## Troubleshooting Common Issues
@@ -152,7 +153,7 @@ curl -i -b cookies.txt -X POST http://localhost:3000/api/auth/logout
 ### Issue 1: "Invalid redirect URI"
 **Solution**: Make sure your redirect URI in Google Cloud Console exactly matches:
 ```
-http://localhost:3000/api/auth/callback
+http://localhost:3001/auth/callback
 ```
 
 ### Issue 2: "Client ID not found"
@@ -179,11 +180,11 @@ http://localhost:3000/api/auth/callback
 - [ ] Google Cloud Console OAuth credentials are configured
 - [ ] Database migration has been run
 - [ ] Server starts without errors
-- [ ] `/api/auth/login` redirects to Google
+- [ ] `/auth/login` redirects to Google
 - [ ] OAuth callback creates user in database
-- [ ] `/api/auth/me` returns user information
+- [ ] `/auth/me` returns user information
 - [ ] Protected routes require authentication
-- [ ] `/api/auth/logout` clears session
+- [ ] `/auth/logout` clears session
 - [ ] Chat endpoint works with authenticated user
 
 ## Quick Test Script
@@ -198,11 +199,11 @@ echo "Testing OAuth flow..."
 
 # Test server health
 echo "1. Testing server health..."
-curl -s http://localhost:3000/health | grep -q "ok" && echo "✅ Server is running" || echo "❌ Server not responding"
+curl -s http://localhost:3001/health | grep -q "ok" && echo "✅ Server is running" || echo "❌ Server not responding"
 
 # Test login redirect
 echo "2. Testing login redirect..."
-response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/auth/login)
+response=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/auth/login)
 if [ "$response" = "302" ]; then
     echo "✅ Login redirect working"
 else
@@ -211,14 +212,14 @@ fi
 
 # Test unauthenticated /me
 echo "3. Testing unauthenticated /me..."
-response=$(curl -s http://localhost:3000/api/auth/me)
+response=$(curl -s http://localhost:3001/auth/me)
 if echo "$response" | grep -q '"user":null'; then
     echo "✅ Unauthenticated /me returns null user"
 else
     echo "❌ Unauthenticated /me should return null user"
 fi
 
-echo "Manual test: Visit http://localhost:3000/api/auth/login in your browser"
+echo "Manual test: Visit http://localhost:3001/auth/login in your browser"
 ```
 
 Run the test script:
@@ -229,7 +230,7 @@ chmod +x test_oauth.sh
 
 ## Expected Flow
 
-1. **User visits** `/api/auth/login`
+1. **User visits** `/auth/login`
 2. **Server redirects** to Google OAuth consent screen
 3. **User grants permissions** and Google redirects back with auth code
 4. **Server exchanges code** for access/refresh tokens

@@ -5,6 +5,7 @@ import { getOAuth2Client } from '../config/google.js';
 import { query } from '../services/db.js';
 
 const router = Router();
+const normalizeOrigin = (value) => value?.trim().replace(/\/+$/, '');
 
 // Generate Google OAuth URL and redirect user
 router.get('/login', (req, res) => {
@@ -92,7 +93,8 @@ router.get('/callback', async (req, res) => {
     
     console.log('Five - Session set for user:', user.email, 'UserId:', user.id);
     
-    res.redirect((process.env.FRONTEND_URL || 'http://localhost:3000') + '/');
+    const frontendUrl = normalizeOrigin(process.env.FRONTEND_URL) || 'http://localhost:3000';
+    res.redirect(`${frontendUrl}/`);
   } catch (error) {
     console.error('OAuth callback error:', error);
     res.status(500).json({ error: 'Authentication failed' });

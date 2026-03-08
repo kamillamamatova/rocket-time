@@ -6,7 +6,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Lightbulb, Send, User, Bot } from "lucide-react";
 
-const API_URL = 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
 interface AICoachProps {
   wastedHours: number;
