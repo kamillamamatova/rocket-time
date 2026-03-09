@@ -44,6 +44,9 @@ router.get('/callback', async (req, res) => {
     const oauth2Client = getOAuth2Client();
     const { tokens } = await oauth2Client.getToken(code);
     console.log("One - Got tokens")
+    if (!tokens?.access_token) {
+      throw new Error('Google token exchange did not return an access token');
+    }
     
     // Get user info from Google
     oauth2Client.setCredentials(tokens);
@@ -69,6 +72,11 @@ router.get('/callback', async (req, res) => {
     }
     
     // Store OAuth credentials - user_id should be the integer id as string
+    const expiryDate =
+      typeof tokens.expiry_date === 'number' && Number.isFinite(tokens.expiry_date)
+        ? new Date(tokens.expiry_date)
+        : null;
+
     await query(
       `INSERT INTO oauth_credentials (user_id, access_token, refresh_token, token_expiry, scope) 
        VALUES (?, ?, ?, ?, ?) 
@@ -77,7 +85,13 @@ router.get('/callback', async (req, res) => {
        refresh_token = VALUES(refresh_token), 
        token_expiry = VALUES(token_expiry), 
        scope = VALUES(scope)`,
-      [String(user.id), tokens.access_token, tokens.refresh_token, new Date(tokens.expiry_date), tokens.scope]
+      [
+        String(user.id),
+        tokens.access_token,
+        tokens.refresh_token ?? null,
+        expiryDate,
+        tokens.scope ?? null
+      ]
     );
     console.log('Four - Stored OAuth credentials')
     
