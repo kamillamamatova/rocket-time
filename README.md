@@ -115,3 +115,8 @@ The project uses a MySQL database.
 
 Full details for all API endpoints are available in the backend's API documentation file:
 `rocketTime/apps/server/API_DOCUMENTATION.md`.
+
+## Free Deployment
+
+A free deployment path for the current codebase is documented in
+[`DEPLOYMENT.md`](/Users/kamillamamatova/rocket-time/DEPLOYMENT.md).

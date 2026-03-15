@@ -1,0 +1,56 @@
+services:
+  - type: web
+    name: rocket-time-api
+    runtime: node
+    plan: free
+    rootDir: rocketTime/apps/server
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: SESSION_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: FRONTEND_URLS
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_OAUTH_REDIRECT_URI
+        sync: false
+      - key: GOOGLE_API_KEY
+        sync: false
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        value: "4000"
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: MYSQL_DB
+        value: time
+      - key: MYSQL_SSL
+        value: "true"
+      - key: MYSQL_SSL_REJECT_UNAUTHORIZED
+        value: "true"
+      - key: COOKIE_SAME_SITE
+        value: none
+
+  - type: web
+    name: rocket-time-web
+    runtime: static
+    plan: free
+    rootDir: rocketTime/apps/web/app/(dashboard)/dashboard
+    buildCommand: npm ci && npm run build
+    staticPublishPath: build
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: VITE_API_URL
+        sync: false
