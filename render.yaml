@@ -47,9 +47,9 @@ services:
     name: rocket-time-web
     runtime: static
     plan: free
-    rootDir: rocketTime/apps/web/app/(dashboard)/dashboard
-    buildCommand: npm ci && npm run build
-    staticPublishPath: build
+    rootDir: rocketTime/apps/web
+    buildCommand: npm ci --prefix "app/(dashboard)/dashboard" && npm run build --prefix "app/(dashboard)/dashboard" && rm -rf dist && cp -R "app/(dashboard)/dashboard/build" dist
+    staticPublishPath: dist
     pullRequestPreviewsEnabled: false
     envVars:
       - key: VITE_API_URL
