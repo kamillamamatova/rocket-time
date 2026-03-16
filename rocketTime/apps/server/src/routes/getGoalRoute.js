@@ -1,12 +1,21 @@
 import express from 'express';
-import { getGoalLogs } from '../services/getGoal.js';
+import { getGoalLogsByUserSession } from '../services/getGoal.js';
 
 const router = express.Router();
 
 //direct to path below
 router.get('/:user_Id', async (req, res) => {
   try {
-    const data = await getGoalLogs(req.params.user_Id);
+    if (!req.session?.userId) {
+      return res.status(401).json({ error: 'Authentication required' });
+    }
+
+    const data = await getGoalLogsByUserSession(req.session.userId, req.params.user_Id);
+
+    if (data.error === 'Forbidden') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     res.json(data);
   } catch (err) {
     console.error(err);

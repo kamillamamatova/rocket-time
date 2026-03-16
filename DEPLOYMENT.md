@@ -4,25 +4,25 @@ This project is ready to deploy on free tiers with:
 
 - Render Static Site for the frontend
 - Render Web Service for the API
-- TiDB Cloud Starter for the MySQL-compatible database
+- Aiven for the MySQL database
 
 ## Why this stack
 
-- Render documents free static sites and free web services.
-- TiDB Cloud Starter is MySQL-compatible and starts at `$0/month`, which means the current `mysql2` backend can keep working without a database rewrite.
+- Render works well for the Node API and static frontend in this repo.
+- Aiven gives you a managed MySQL connection, which means the current `mysql2` backend can keep working without a database rewrite.
 - This keeps your app close to the code you already have.
 
 ## 1. Create the database
 
-Create a free TiDB Cloud Starter cluster and a database named `time`.
+Use your existing Aiven MySQL service and create a database named `time` if you have not already.
 
-Then run [`sqldump/time_create.sql`](/Users/kamillamamatova/rocket-time/sqldump/time_create.sql) against it.
+Then run [`sqldump/time_render.sql`](/Users/kamillamamatova/rocket-time/sqldump/time_render.sql) against it.
 
 Notes:
 
-- TiDB is MySQL-compatible, so the existing schema should work with the current backend.
-- Use the public connection settings from TiDB Cloud.
+- Use the host, port, username, password, and database name from your Aiven service.
 - Keep TLS enabled.
+- [`sqldump/time_render.sql`](/Users/kamillamamatova/rocket-time/sqldump/time_render.sql) is the safer hosted version of the schema. It avoids the local-only reset behavior in [`sqldump/time_create.sql`](/Users/kamillamamatova/rocket-time/sqldump/time_create.sql).
 
 ## 2. Deploy the API on Render
 
@@ -47,10 +47,10 @@ GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 GOOGLE_OAUTH_REDIRECT_URI=https://your-api-name.onrender.com/auth/callback
 GOOGLE_API_KEY=your_google_ai_api_key
-MYSQL_HOST=your_tidb_host
-MYSQL_PORT=4000
-MYSQL_USER=your_tidb_user
-MYSQL_PASSWORD=your_tidb_password
+MYSQL_HOST=your_aiven_host
+MYSQL_PORT=your_aiven_port
+MYSQL_USER=your_aiven_user
+MYSQL_PASSWORD=your_aiven_password
 MYSQL_DB=time
 MYSQL_SSL=true
 MYSQL_SSL_REJECT_UNAUTHORIZED=true
@@ -103,5 +103,3 @@ Render's free web services spin down after inactivity, so the API may take a sho
 - [Render static sites](https://render.com/docs/static-sites)
 - [Render monorepo root directories](https://render.com/docs/monorepo-support)
 - [Render Blueprint spec](https://render.com/docs/blueprint-spec)
-- [TiDB Cloud pricing](https://www.pingcap.com/pricing/)
-- [TiDB MySQL compatibility](https://docs.pingcap.com/tidbcloud/mysql-compatibility/)

@@ -1,11 +1,10 @@
 import db from './db.js'; // import database
 
-export async function deleteTimeLogs(timelog_Id){
+export async function deleteTimeLogs(timelog_Id, userId){
   try {
-    
     const result = await db.query(
-        'DELETE FROM timelogs WHERE id = ?', 
-        [timelog_Id]);
+        'DELETE FROM timelogs WHERE id = ? AND user_id = ?', 
+        [timelog_Id, userId]);
     
     if (result.affectedRows === 0) {
       return { error: 'Time log not found' };

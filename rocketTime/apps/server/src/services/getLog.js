@@ -22,3 +22,11 @@ export async function getTimeLogs(userId){
         throw err;
     }
 };
+
+export async function getTimeLogByUserSession(sessionUserId, requestedUserId) {
+    if (String(sessionUserId) !== String(requestedUserId)) {
+        return { error: 'Forbidden' };
+    }
+
+    return getTimeLogs(sessionUserId);
+}

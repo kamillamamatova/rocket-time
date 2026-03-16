@@ -21,3 +21,11 @@ export async function getGoalLogs(user_Id){
         throw err;
     }
 };
+
+export async function getGoalLogsByUserSession(sessionUserId, requestedUserId) {
+    if (String(sessionUserId) !== String(requestedUserId)) {
+        return { error: 'Forbidden' };
+    }
+
+    return getGoalLogs(sessionUserId);
+}

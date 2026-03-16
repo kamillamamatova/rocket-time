@@ -1,11 +1,10 @@
 import db from './db.js'; // import database
 
-export async function deleteGoal(timelog_Id){
+export async function deleteGoal(goalId, userId){
   try {
-    
     const result = await db.query(
-        'DELETE FROM goals WHERE id = ?', 
-        [timelog_Id]);
+        'DELETE FROM goals WHERE id = ? AND user_id = ?', 
+        [goalId, userId]);
     
     if (result.affectedRows === 0) {
       return { error: 'Goal not found' };

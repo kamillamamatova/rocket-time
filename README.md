@@ -120,3 +120,9 @@ Full details for all API endpoints are available in the backend's API documentat
 
 A free deployment path for the current codebase is documented in
 [`DEPLOYMENT.md`](/Users/kamillamamatova/rocket-time/DEPLOYMENT.md).
+
+For hosted databases, use
+[`sqldump/time_render.sql`](/Users/kamillamamatova/rocket-time/sqldump/time_render.sql)
+instead of the local reset script.
+
+If you're already using Aiven for MySQL and Render for hosting, the deployment guide is now aligned to that setup.
