@@ -162,7 +162,17 @@ router.post('/logout', (req, res) => {
   if (req.session) {
     req.session = null;
   }
-  res.clearCookie('sid');
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  const cookieSameSite = process.env.COOKIE_SAME_SITE || (isProduction ? 'none' : 'lax');
+
+  res.clearCookie('sid', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: cookieSameSite,
+    path: '/',
+  });
+
   res.json({ message: 'Logged out successfully' });
 });
 
