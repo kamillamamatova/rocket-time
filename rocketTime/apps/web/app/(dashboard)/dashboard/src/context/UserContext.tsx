@@ -34,7 +34,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     const fetchUserData = async () => {
       try {
         // Use 'credentials: include' to send the session cookie
-        const res = await fetch(`${API_URL}/auth/me`, { credentials: 'include' });
+        const res = await fetch(`${API_URL}/auth/me?ts=${Date.now()}`, {
+          credentials: 'include',
+          cache: 'no-store',
+        });
         
         if (res.ok) {
           const payload = await res.json();

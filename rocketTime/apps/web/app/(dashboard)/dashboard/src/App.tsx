@@ -14,6 +14,7 @@ import { CoinSettings } from "./components/CoinSettings";
 import { RecentTransactions } from "./components/RecentTransactions";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
 import { Button } from "./components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./components/ui/alert-dialog";
 import { LayoutDashboard, Clock, Target, TrendingUp, Lightbulb, Settings, LogOut } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { useUser } from './context/UserContext';
@@ -33,6 +34,7 @@ export default function App() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [coinRates, setCoinRates] = useState<Record<string, number>>({
     productive: 50,
     learning: 50,
@@ -546,11 +548,28 @@ export default function App() {
                 variant="destructive" 
                 className="shadow-lg hover:shadow-xl transition-all hover:scale-105"
                 size="lg"
-                onClick={handleLogout}
+                onClick={() => setShowLogoutDialog(true)}
               >
                 <LogOut className="h-5 w-5 mr-2" />
                 Log Out
               </Button>
+
+              <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure you want to logout?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      You'll need to log back in to access your dashboard. All your data is safely saved.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleLogout} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Logout
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>

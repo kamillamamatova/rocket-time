@@ -6,6 +6,14 @@ import { query } from '../services/db.js';
 
 const router = Router();
 const normalizeOrigin = (value) => value?.trim().replace(/\/+$/, '');
+const applyNoStore = (res) => {
+  res.set({
+    'Cache-Control': 'no-store, no-cache, must-revalidate, private',
+    Pragma: 'no-cache',
+    Expires: '0',
+  });
+};
+
 const clearSessionCookie = (req, res) => {
   if (req.session) {
     req.session = null;
@@ -133,6 +141,7 @@ router.get('/callback', async (req, res) => {
 // Get current user info
 router.get('/me', async (req, res) => {
   try {
+    applyNoStore(res);
     console.log('Session data:', req.session);
     
     if (!req.session || !req.session.userId) {
@@ -160,6 +169,7 @@ router.get('/me', async (req, res) => {
 // Backward-compatible alias
 router.get('/user', async (req, res) => {
   try {
+    applyNoStore(res);
     if (!req.session || !req.session.userId) {
       return res.json({ user: null });
     }
@@ -174,11 +184,13 @@ router.get('/user', async (req, res) => {
 
 // Logout
 router.post('/logout', (req, res) => {
+  applyNoStore(res);
   clearSessionCookie(req, res);
   res.json({ message: 'Logged out successfully' });
 });
 
 router.get('/logout', (req, res) => {
+  applyNoStore(res);
   clearSessionCookie(req, res);
 
   const redirectTo = normalizeOrigin(req.query.redirect) || normalizeOrigin(process.env.FRONTEND_URL);
