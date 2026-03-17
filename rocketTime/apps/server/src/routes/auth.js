@@ -6,6 +6,21 @@ import { query } from '../services/db.js';
 
 const router = Router();
 const normalizeOrigin = (value) => value?.trim().replace(/\/+$/, '');
+const clearSessionCookie = (req, res) => {
+  if (req.session) {
+    req.session = null;
+  }
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  const cookieSameSite = process.env.COOKIE_SAME_SITE || (isProduction ? 'none' : 'lax');
+
+  res.clearCookie('sid', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: cookieSameSite,
+    path: '/',
+  });
+};
 
 // Generate Google OAuth URL and redirect user
 router.get('/login', (req, res) => {
@@ -159,19 +174,17 @@ router.get('/user', async (req, res) => {
 
 // Logout
 router.post('/logout', (req, res) => {
-  if (req.session) {
-    req.session = null;
+  clearSessionCookie(req, res);
+  res.json({ message: 'Logged out successfully' });
+});
+
+router.get('/logout', (req, res) => {
+  clearSessionCookie(req, res);
+
+  const redirectTo = normalizeOrigin(req.query.redirect) || normalizeOrigin(process.env.FRONTEND_URL);
+  if (redirectTo) {
+    return res.redirect(`${redirectTo}/`);
   }
-
-  const isProduction = process.env.NODE_ENV === 'production';
-  const cookieSameSite = process.env.COOKIE_SAME_SITE || (isProduction ? 'none' : 'lax');
-
-  res.clearCookie('sid', {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: cookieSameSite,
-    path: '/',
-  });
 
   res.json({ message: 'Logged out successfully' });
 });
