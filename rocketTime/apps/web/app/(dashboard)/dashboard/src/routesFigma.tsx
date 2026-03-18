@@ -1,7 +1,7 @@
 import { createBrowserRouter } from "react-router";
 import { LandingPage } from "./components/LandingPageFigma";
 import { AuthPageWrapper } from "./components/AuthPageWrapper";
-import { Dashboard } from "./components/Dashboard";
+import App from "./App";
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +14,6 @@ export const router = createBrowserRouter([
   },
   {
     path: "/dashboard",
-    Component: Dashboard,
+    Component: App,
   },
 ]);

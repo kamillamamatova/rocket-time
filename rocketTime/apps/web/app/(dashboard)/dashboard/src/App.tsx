@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LandingPage } from "./components/LandingPage";
+import { Navigate } from "react-router";
 import { DashboardOverview } from "./components/DashboardOverview";
 import { TimeLogger } from "./components/TimeLogger";
 import { GoalManager, Goal } from "./components/GoalManager";
@@ -514,14 +514,9 @@ export default function App() {
     );
   }
 
-  // Show auth page if not logged in
+  // Redirect to auth if not logged in
   if (!isAuthenticated) {
-    return (
-      <>
-        <Toaster />
-        <LandingPage onGetStarted={handleGoogleLogin} />
-      </>
-    );
+    return <Navigate to="/auth" replace />;
   }
 
   return (
