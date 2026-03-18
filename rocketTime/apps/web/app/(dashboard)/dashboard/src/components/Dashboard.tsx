@@ -1,35 +1,34 @@
 import { useState, useEffect } from "react";
-import { LandingPage } from "./components/LandingPage";
-import { DashboardOverview } from "./components/DashboardOverview";
-import { TimeLogger } from "./components/TimeLogger";
-import { GoalManager, Goal } from "./components/GoalManager";
-import { TaskManager, Task } from "./components/TaskManager";
-import { DailyAnalysis } from "./components/DailyAnalysis";
-import { ChartsSection } from "./components/ChartsSection";
-import { AICoach } from "./components/AICoach";
-import { StreakTracker } from "./components/StreakTracker";
-import { WeeklyTrendChart } from "./components/WeeklyTrendChart";
-import { HabitSubscription } from "./components/HabitSubscription";
-import { CoinSettings } from "./components/CoinSettings";
-import { RecentTransactions } from "./components/RecentTransactions";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./components/ui/tabs";
-import { Button } from "./components/ui/button";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./components/ui/alert-dialog";
+import { useNavigate } from "react-router";
+import { DashboardOverview } from "./DashboardOverview";
+import { TimeLogger } from "./TimeLogger";
+import { GoalManager, Goal } from "./GoalManager";
+import { TaskManager, Task } from "./TaskManager";
+import { DailyAnalysis } from "./DailyAnalysis";
+import { ChartsSection } from "./ChartsSection";
+import { AICoach } from "./AICoach";
+import { StreakTracker } from "./StreakTracker";
+import { WeeklyTrendChart } from "./WeeklyTrendChart";
+import { HabitSubscription } from "./HabitSubscription";
+import { CoinSettings } from "./CoinSettings";
+import { RecentTransactions } from "./RecentTransactions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Button } from "./ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "./ui/alert-dialog";
 import { LayoutDashboard, Clock, Target, TrendingUp, Lightbulb, Settings, LogOut } from "lucide-react";
-import { Toaster } from "./components/ui/sonner";
-import { useUser } from './context/UserContext';
 
 interface TimeEntry {
   id: string;
   activity: string;
-  category: "productive" | "hobbies" | "wasted" | "time wasted" | "learning" | "social" | "exercise";
+  category: string;
   duration: number;
   date: string;
   goalId?: string;
 }
 
-export default function App() {
-  const { user, isAuthenticated, isLoading } = useUser();
+export function Dashboard() {
+  const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [goals, setGoals] = useState<Goal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -39,150 +38,85 @@ export default function App() {
     productive: 50,
     learning: 50,
     exercise: 50,
-    social: 30,
+    social: 50,
     hobbies: 20,
     wasted: -30,
   });
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
-
   const calculateCoins = (duration: number, category: string): number => {
-    const normalized = category.trim().toLowerCase();
-    const rate =
-      normalized === "time wasted" || normalized === "wasted"
-        ? coinRates["wasted"]
-        : coinRates[normalized] || 0;
-
+    const rate = coinRates[category] || 0;
     return duration * rate;
   };
 
+  // Check for saved session on mount
+  useEffect(() => {
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedUser) {
+      setCurrentUser(savedUser);
+    } else {
+      // No user logged in, redirect to auth
+      navigate("/auth");
+    }
+  }, [navigate]);
+
   // Load user-specific data when user logs in
   useEffect(() => {
-    if (!user) {
-  // If user logs out, clear their data
-  setTimeEntries([]);
-  setGoals([]);
-  setTasks([]);
-  return;
-}
+    if (!currentUser) return;
 
-    const loadUserData = async () => {
-      try {
-        const res = await fetch(`${API_URL}/getLog/${user.id}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: 'include', // <-- Add this line to send cookies
-        });
-
-        if (!res.ok) throw new Error("Failed to fetch time logs");
-
-        const data = await res.json().catch(() => ({}));
-
-        if (data.timelogs && Array.isArray(data.timelogs)) {
-          const formatted = data.timelogs.map((log: any) => ({
-            id: log.id.toString(),
-            activity: log.title,
-            category: log.category,
-            duration: log.duration_hr,
-            date: log.date,
-            goalId: log.goal_id || undefined,
-          }));
-
-          // Replace instead of append
-          setTimeEntries(formatted);
-        } else {
-          console.log(data.message || "No logs found for this user.");
-          setTimeEntries([]); // Clear entries if none found
-        }
-
-      } catch (err) {
-        console.error("Error loading user time logs:", err);
-      }
-    };
-
-    const loadUserGoals = async () => {
-      try {
-        //const res = await fetch(`http://localhost:3001/getGoal/${userId}`);----------------
-        const res = await fetch(`${API_URL}/getGoal/${user.id}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-          credentials: 'include', // <-- Add this line to send cookies
-        });
-
-        const data = await res.json();
-
-        if (!res.ok) throw new Error("Failed to fetch goals");
-      
-        if (data.goals && Array.isArray(data.goals)) {
-          const formattedGoals = data.goals.map((g: any) => ({
-            id: g.id,
-            name: g.title,
-            targetHours: g.target_hours,
-            currentHours: g.progress_hours,
-            category: g.category,
-            deadline: g.deadline,
-          }));
-          setGoals(formattedGoals);
-        } else {
-          setGoals([]);
-          console.log(data.message || "No goals found");
-        }
-      } catch (err) {
-        console.error("Failed to fetch goals:", err);
-      }
-    };
-
-    // Load localStorage data first
-    const userKey = `user_${user.id}`;
+    const userKey = `user_${currentUser}`;
+    const savedEntries = localStorage.getItem(`${userKey}_timeEntries`);
+    const savedGoals = localStorage.getItem(`${userKey}_goals`);
     const savedTasks = localStorage.getItem(`${userKey}_tasks`);
     const savedRates = localStorage.getItem(`${userKey}_coinRates`);
     const savedGoogleConnect = localStorage.getItem(`${userKey}_isGoogleConnected`);
-    const savedEntries = localStorage.getItem(`${userKey}_timeEntries`);
 
     if (savedEntries) {
       setTimeEntries(JSON.parse(savedEntries));
     }
-
-    if (savedTasks) setTasks(JSON.parse(savedTasks));
-    if (savedRates) setCoinRates(JSON.parse(savedRates));
-    if (savedGoogleConnect) setIsGoogleConnected(JSON.parse(savedGoogleConnect));
-
-    // Then refresh from backend
-    loadUserData();
-    loadUserGoals();
-  }, [user]);
-
+    if (savedGoals) {
+      setGoals(JSON.parse(savedGoals));
+    }
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
+    if (savedRates) {
+      setCoinRates(JSON.parse(savedRates));
+    }
+    if (savedGoogleConnect) {
+      setIsGoogleConnected(JSON.parse(savedGoogleConnect));
+    }
+  }, [currentUser]);
 
   // Save to localStorage whenever data changes (user-specific)
-  //useEffect(() => {
-  //  if (!currentUser) return;
-  //  const userKey = `user_${currentUser}`;
-  //  localStorage.setItem(`${userKey}_timeEntries`, JSON.stringify(timeEntries));
-  //}, [timeEntries, currentUser]);
-
-  //useEffect(() => {
-  //  if (!currentUser) return;
-  //  const userKey = `user_${currentUser}`;
-  //  localStorage.setItem(`${userKey}_goals`, JSON.stringify(goals));
-  //}, [goals, currentUser]);
+  useEffect(() => {
+    if (!currentUser) return;
+    const userKey = `user_${currentUser}`;
+    localStorage.setItem(`${userKey}_timeEntries`, JSON.stringify(timeEntries));
+  }, [timeEntries, currentUser]);
 
   useEffect(() => {
-    if (!user) return;
-    const userKey = `user_${user.id}`;
+    if (!currentUser) return;
+    const userKey = `user_${currentUser}`;
+    localStorage.setItem(`${userKey}_goals`, JSON.stringify(goals));
+  }, [goals, currentUser]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const userKey = `user_${currentUser}`;
     localStorage.setItem(`${userKey}_tasks`, JSON.stringify(tasks));
-  }, [tasks, user]);
+  }, [tasks, currentUser]);
 
   useEffect(() => {
-    if (!user) return;
-    const userKey = `user_${user.id}`;
+    if (!currentUser) return;
+    const userKey = `user_${currentUser}`;
     localStorage.setItem(`${userKey}_coinRates`, JSON.stringify(coinRates));
-  }, [coinRates, user]);
+  }, [coinRates, currentUser]);
 
   useEffect(() => {
-    if (!user) return;
-    const userKey = `user_${user.id}`;
+    if (!currentUser) return;
+    const userKey = `user_${currentUser}`;
     localStorage.setItem(`${userKey}_isGoogleConnected`, JSON.stringify(isGoogleConnected));
-  }, [isGoogleConnected, user]);
+  }, [isGoogleConnected, currentUser]);
 
   const handleAddEntry = (entry: Omit<TimeEntry, "id" | "date">) => {
     const newEntry: TimeEntry = {
@@ -197,7 +131,7 @@ export default function App() {
     if (entry.goalId) {
       setGoals((prev) =>
         prev.map((goal) =>
-          String(goal.id) === String(entry.goalId)
+          goal.id === entry.goalId
             ? { ...goal, currentHours: goal.currentHours + entry.duration }
             : goal
         )
@@ -214,70 +148,27 @@ export default function App() {
     setGoals((prev) => [...prev, newGoal]);
   };
 
-  const handleDeleteGoal = async (id: string) => {
-    try {
-      const res = await fetch(`${API_URL}/deleteGoal/${id}`, {
-        method: "DELETE",
-        credentials: "include",
-      }); 
-
-      const data = await res.json();  
-
-      if (!res.ok) {
-        console.error("Failed to delete goal:", data.error);
-        return;
-      } 
-
-      // Update state only if delete was successful
-      setGoals((prev) => prev.filter((g) => g.id !== id));
-      console.log("Goal deleted successfully:", data.message);
-    } catch (err) {
-      console.error("Error deleting goal:", err);
-    }
+  const handleDeleteGoal = (id: string) => {
+    setGoals((prev) => prev.filter((g) => g.id !== id));
   };
 
-  const handleDeleteEntry = async (id: string) => {
-    try {
-      // Delete on the server
-      const res = await fetch(`${API_URL}/deleteLog/${id}`, { 
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
+  const handleDeleteEntry = (id: string) => {
+    const entryToDelete = timeEntries.find((e) => e.id === id);
+    if (!entryToDelete) return;
 
-      if (!res.ok) {
-        const errText = await res.text();
-        console.error("Server failed to delete entry:", errText);
-        throw new Error("Failed to delete entry on server");
-      }
-
-      const data = await res.json();
-      console.log("Delete response:", data);
-
-      // Update frontend state
-      const entryToDelete = timeEntries.find((e) => e.id === id);
-      if (!entryToDelete) return;
-
-      // Update goal progress if entry was linked to a goal
-      if (entryToDelete.goalId) {
-        setGoals((prev) =>
-          prev.map((goal) =>
-            goal.id === entryToDelete.goalId
-              ? { ...goal, currentHours: Math.max(0, goal.currentHours - entryToDelete.duration) }
-              : goal
-          )
-        );
-      }
-
-      // Remove entry from local state
-      setTimeEntries((prev) => prev.filter((e) => e.id !== id));
-
-      console.log("Entry deleted successfully");
-
-    } catch (err) {
-      console.error("Error deleting time entry:", err);
+    // Update goal progress if entry was linked to a goal
+    if (entryToDelete.goalId) {
+      setGoals((prev) =>
+        prev.map((goal) =>
+          goal.id === entryToDelete.goalId
+            ? { ...goal, currentHours: Math.max(0, goal.currentHours - entryToDelete.duration) }
+            : goal
+        )
+      );
     }
 
+    // Remove the entry
+    setTimeEntries((prev) => prev.filter((e) => e.id !== id));
   };
 
   const handleAddTask = (task: Omit<Task, "id" | "date">) => {
@@ -312,7 +203,7 @@ export default function App() {
       const newEntry: TimeEntry = {
         id: Date.now().toString(),
         activity: task.title,
-        category: category as TimeEntry["category"],
+        category: category,
         duration: duration,
         date: new Date().toISOString(),
         goalId: task.goalId,
@@ -370,17 +261,11 @@ export default function App() {
   );
 
   const productiveHours = weekEntries
-    .filter((e) => {
-      const c = e.category.trim().toLowerCase();
-      return c === "productive" || c === "learning";
-    })
+    .filter((e) => e.category === "productive" || e.category === "learning")
     .reduce((sum, e) => sum + e.duration, 0);
 
   const wastedHours = weekEntries
-    .filter((e) => {
-      const c = e.category.trim().toLowerCase();
-      return c === "time wasted" || c === "wasted";
-    })
+    .filter((e) => e.category === "wasted")
     .reduce((sum, e) => sum + e.duration, 0);
 
   // Calculate total coins deficit from overdue goals only
@@ -494,46 +379,39 @@ export default function App() {
     };
   });
 
-  const handleGoogleLogin = () => {
-    const redirectTo = encodeURIComponent(window.location.origin);
-    window.location.href = `${API_URL}/auth/login?redirect=${redirectTo}`;
-  };
-
   const handleLogout = () => {
-    const redirectTo = encodeURIComponent(window.location.origin);
-    window.location.assign(`${API_URL}/auth/logout?redirect=${redirectTo}`);
+    setCurrentUser(null);
+    localStorage.removeItem("currentUser");
+    // Clear state
+    setTimeEntries([]);
+    setGoals([]);
+    setTasks([]);
+    setCoinRates({
+      productive: 50,
+      learning: 50,
+      exercise: 50,
+      social: 50,
+      hobbies: 20,
+      wasted: -30,
+    });
+    setIsGoogleConnected(false);
+    setShowLogoutDialog(false);
+    navigate("/");
   };
 
-  // Show auth page if not logged in
-  // Show loading spinner while context is checking auth
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div>Loading...</div>
-      </div>
-    );
-  }
-
-  // Show auth page if not logged in
-  if (!isAuthenticated) {
-    return (
-      <>
-        <Toaster />
-        <LandingPage onGetStarted={handleGoogleLogin} />
-      </>
-    );
+  // Don't render until we've checked for user
+  if (!currentUser) {
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <Toaster />
-      
       <div className="border-b bg-gradient-to-r from-purple-100 via-orange-50 to-yellow-100">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="flex items-center gap-2">
-                🪙 RocketTime Dashboard
+                🪙 CoinTime Dashboard
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 Track your time, earn coins, achieve your goals!
@@ -542,11 +420,7 @@ export default function App() {
             <div className="flex items-center gap-4">
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Logged in as</p>
-                <p className="font-medium">
-                  {user.first_name && user.last_name
-                    ? `${user.first_name} ${user.last_name}`
-                    : user.email || user.id}
-                </p>
+                <p className="font-medium">{currentUser}</p>
               </div>
               <Button 
                 variant="destructive" 
@@ -557,7 +431,7 @@ export default function App() {
                 <LogOut className="h-5 w-5 mr-2" />
                 Log Out
               </Button>
-
+              
               <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
                 <AlertDialogContent>
                   <AlertDialogHeader>
@@ -638,7 +512,7 @@ export default function App() {
             </div>
 
             <RecentTransactions
-              entries={timeEntries}
+              entries={weekEntries}
               goals={goals}
               calculateCoins={calculateCoins}
               onDeleteEntry={handleDeleteEntry}

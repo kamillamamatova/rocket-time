@@ -7,7 +7,7 @@ interface TimeEntry {
   date: string;
   activity: string;
   duration: number;
-  category: "Productive" | "Hobbies" | "Time Wasted" | "Learning" | "Social" | "Exercise";
+  category: string;
   goalId?: string;
 }
 
