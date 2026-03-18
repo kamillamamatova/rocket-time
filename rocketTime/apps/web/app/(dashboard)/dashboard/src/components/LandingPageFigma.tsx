@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { useNavigate } from "react-router";
+import { useUser } from "../context/UserContext";
 
 const gradientText = {
   background: "linear-gradient(90deg, #f97316, #a855f7)",
@@ -128,7 +129,14 @@ function FadeIn({ children, delay = 0, style = {} }: { children: ReactNode; dela
 
 export function LandingPage() {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useUser();
   const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);

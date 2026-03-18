@@ -11,7 +11,7 @@ export function AuthPage() {
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
-    const redirectTo = encodeURIComponent(window.location.origin + '/dashboard');
+    const redirectTo = encodeURIComponent(window.location.origin);
     // Redirect to Google OAuth login
     window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/login?redirect=${redirectTo}`;
 
