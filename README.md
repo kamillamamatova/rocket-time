@@ -1,128 +1,178 @@
 # Rocket Time
 
-This repository contains the code for Rocket Time, a time management and goal-setting application. It includes a backend API and a frontend dashboard. The API provides endpoints for Google OAuth authentication, AI-powered chat functionality, and CRUD operations for goals and time logs.
+Rocket Time is a goal-setting and time-tracking app with a Node/Express API and a React/Vite dashboard. It supports Google OAuth login, AI-assisted planning, goal management, time logging, and productivity stats.
+
+The app is now deployed with:
+
+- Render for hosting
+- Aiven for the MySQL database
 
 ## Project Structure
 
-This is a monorepo containing several packages:
-
-* `rocketTime/apps/server`: The backend API server, "rocket-time-server".
-* `rocketTime/apps/web/app/(dashboard)/dashboard`: The frontend "Goal Setting Dashboard" application.
-* `sqldump/`: Contains the MySQL database schema.
-
----
+- `rocketTime/apps/server` - Express API
+- `rocketTime/apps/web/app/(dashboard)/dashboard` - React dashboard
+- `sqldump/` - MySQL schema files
+- `render.yaml` - Render Blueprint config
+- `DEPLOYMENT.md` - deployment notes for Render + Aiven
 
 ## Features
 
-Based on the API documentation, the application supports:
-
-* **Google OAuth:** User authentication via Google (`/api/auth/login`, `/api/auth/callback`).
-* **AI Chat Agent:** An AI assistant to process natural language messages (`/api/agent/chat`) for tasks like:
-    * Creating Google Calendar events
-    * Adding goals/tasks
-    * Planning your week
-    * Prioritizing tasks
-    * Getting productivity feedback
-* **Goal Management:** CRUD operations for user goals (`/api/calendar/goals`).
-* **Time Logging:** CRUD operations for time logs associated with goals (`/api/calendar/timelogs`).
-* **Statistics:** An endpoint to get user productivity statistics (`/api/calendar/stats`).
-
----
+- Google OAuth authentication
+- AI chat assistant for planning and productivity help
+- Goal CRUD endpoints
+- Time log CRUD endpoints
+- Productivity statistics
 
 ## Tech Stack
 
-Key technologies used in this project include:
+### Backend
 
-* **Backend (Server):**
-    * Node.js
-    * Express
-    * MySQL2 (mysql2)
-    * Google Generative AI (`@google/generative-ai`)
-    * Google APIs (`googleapis`)
-    * Zod (for validation)
-* **Frontend (Dashboard):**
-    * React
-    * Vite
-    * TypeScript
-    * `lucide-react` (for icons)
-    * A component library based on `@radix-ui/*` (e.g., Dialog, Popover, Select)
-    * `recharts` (for charts)
-    * `react-hook-form` (for forms)
+- Node.js
+- Express
+- MySQL2
+- Google APIs
+- `@google/generative-ai`
+- Zod
 
----
+### Frontend
 
-## Setup and Installation
+- React
+- Vite
+- TypeScript
+- Radix UI
+- `react-hook-form`
+- `recharts`
+- `lucide-react`
 
-### 1. Database Setup
+## Deployment
 
-The project uses a MySQL database.
+### Hosting
 
-1.  Create a database named `time`.
-2.  Use the `sqldump/time_create.sql` file to create the necessary tables:
-    * `users`: Stores user information.
-    * `goals`: Stores user goals.
-    * `timelogs`: Stores time log entries.
-    * `oauth_credentials`: Stores user's Google OAuth tokens.
+- API: Render Web Service
+- Frontend: Render Static Site
+- Database: Aiven MySQL
 
-### 2. Backend (Server)
+### Render config
 
-1.  Navigate to the server directory:
-    ```bash
-    cd rocketTime/apps/server
-    ```
-2.  Install the dependencies (assuming npm based on `package.json`):
-    ```bash
-    npm install
-    ```
-3.  Create a `.env` file and add the required environment variables:
-    ```env
-    GOOGLE_CLIENT_ID=your_google_client_id
-    GOOGLE_CLIENT_SECRET=your_google_client_secret
-    GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3000/api/auth/callback
-    GOOGLE_API_KEY=your_google_ai_api_key
-    SESSION_SECRET=your_session_secret
-    FRONTEND_URL=http://localhost:5173
-    ```
-    *(Note: You will also need to add your MySQL database credentials, though they are not listed in the API documentation).*
-4.  Start the development server:
-    ```bash
-    npm run dev
-    ```
-   
-    The server will run on `http://localhost:3000`.
+The repo includes [`render.yaml`](/Users/kamillamamatova/rocket-time/render.yaml) with:
 
-### 3. Frontend (Dashboard)
+- API root directory: `rocketTime/apps/server`
+- API health check: `/health`
+- Frontend build based on the dashboard app
 
-1.  Navigate to the dashboard directory:
-    ```bash
-    cd rocketTime/apps/web/app/(dashboard)/dashboard
-    ```
-2.  Install the dependencies:
-    ```bash
-    npm i
-    ```
-   
-3.  Start the development server:
-    ```bash
-    npm run dev
-    ```
-   
-    The frontend will be accessible (likely at `http://localhost:5173`, based on the server's `FRONTEND_URL` environment variable).
+### Database
 
----
+Use [`sqldump/time_render.sql`](/Users/kamillamamatova/rocket-time/sqldump/time_render.sql) to initialize the hosted MySQL database on Aiven.
 
-## API Documentation
+Aiven should be configured with TLS enabled. The server supports that with:
 
-Full details for all API endpoints are available in the backend's API documentation file:
-`rocketTime/apps/server/API_DOCUMENTATION.md`.
+```env
+MYSQL_SSL=true
+MYSQL_SSL_REJECT_UNAUTHORIZED=true
+```
 
-## Free Deployment
+## Local Development
 
-A free deployment path for the current codebase is documented in
-[`DEPLOYMENT.md`](/Users/kamillamamatova/rocket-time/DEPLOYMENT.md).
+### 1. Create the database
 
-For hosted databases, use
-[`sqldump/time_render.sql`](/Users/kamillamamatova/rocket-time/sqldump/time_render.sql)
-instead of the local reset script.
+Create a MySQL database named `time`, then run:
 
-If you're already using Aiven for MySQL and Render for hosting, the deployment guide is now aligned to that setup.
+```bash
+mysql -u your_user -p < sqldump/time_render.sql
+```
+
+If you are using Aiven locally as well, use your Aiven host, port, username, and password.
+
+### 2. Run the API
+
+Go to [`rocketTime/apps/server`](/Users/kamillamamatova/rocket-time/rocketTime/apps/server) and create a `.env` file based on the values below:
+
+```env
+PORT=3001
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_OAUTH_REDIRECT_URI=http://localhost:3001/auth/callback
+GOOGLE_CALENDAR_SCOPES=https://www.googleapis.com/auth/calendar
+GOOGLE_API_KEY=your_google_ai_api_key
+
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_USER=your_mysql_user
+MYSQL_PASSWORD=your_mysql_password
+MYSQL_DB=time
+MYSQL_SSL=false
+MYSQL_SSL_REJECT_UNAUTHORIZED=true
+
+SESSION_SECRET=replace_with_a_long_random_secret
+COOKIE_SAME_SITE=lax
+```
+
+Install and run:
+
+```bash
+cd rocketTime/apps/server
+npm install
+npm run dev
+```
+
+The API runs at `http://localhost:3001`.
+
+### 3. Run the dashboard
+
+Create a `.env` in [`rocketTime/apps/web/app/(dashboard)/dashboard`](/Users/kamillamamatova/rocket-time/rocketTime/apps/web/app/(dashboard)/dashboard):
+
+```env
+VITE_API_URL=http://localhost:3001
+```
+
+Install and run:
+
+```bash
+cd "rocketTime/apps/web/app/(dashboard)/dashboard"
+npm install
+npm run dev
+```
+
+The dashboard runs through Vite on its local dev port.
+
+## Production Environment Variables
+
+### API
+
+```env
+NODE_ENV=production
+PORT=10000
+SESSION_SECRET=your-long-random-secret
+FRONTEND_URL=https://your-frontend.onrender.com
+FRONTEND_URLS=https://your-frontend.onrender.com
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_OAUTH_REDIRECT_URI=https://your-api.onrender.com/auth/callback
+GOOGLE_API_KEY=your_google_ai_api_key
+MYSQL_HOST=your-aiven-host
+MYSQL_PORT=your-aiven-port
+MYSQL_USER=your-aiven-user
+MYSQL_PASSWORD=your-aiven-password
+MYSQL_DB=time
+MYSQL_SSL=true
+MYSQL_SSL_REJECT_UNAUTHORIZED=true
+COOKIE_SAME_SITE=none
+```
+
+### Frontend
+
+```env
+VITE_API_URL=https://your-api.onrender.com
+```
+
+## Health Check
+
+- API health endpoint: `GET /health`
+
+## Documentation
+
+- API docs: [`rocketTime/apps/server/API_DOCUMENTATION.md`](/Users/kamillamamatova/rocket-time/rocketTime/apps/server/API_DOCUMENTATION.md)
+- Deployment guide: [`DEPLOYMENT.md`](/Users/kamillamamatova/rocket-time/DEPLOYMENT.md)
