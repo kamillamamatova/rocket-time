@@ -23,6 +23,15 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 // Create the context
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+const isValidUser = (value: unknown): value is User => {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Partial<User>;
+  return typeof candidate.id === 'string' || typeof candidate.id === 'number';
+};
+
 // Create the Provider component
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -41,7 +50,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         
         if (res.ok) {
           const payload = await res.json();
-          const userData = payload?.user ?? payload ?? null;
+          const userData = isValidUser(payload?.user) ? payload.user : null;
           setUser(userData);
           setIsAuthenticated(Boolean(userData));
         } else {
