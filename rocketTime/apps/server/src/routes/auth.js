@@ -6,12 +6,29 @@ import { query } from '../services/db.js';
 
 const router = Router();
 const normalizeOrigin = (value) => value?.trim().replace(/\/+$/, '');
+const allowedFrontendOrigins = [
+  ...new Set(
+    (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
+      .split(',')
+      .map(normalizeOrigin)
+      .filter(Boolean)
+  ),
+];
 const applyNoStore = (res) => {
   res.set({
     'Cache-Control': 'no-store, no-cache, must-revalidate, private',
     Pragma: 'no-cache',
     Expires: '0',
   });
+};
+
+const resolveFrontendOrigin = (value) => {
+  const normalized = normalizeOrigin(value);
+  if (!normalized) {
+    return null;
+  }
+
+  return allowedFrontendOrigins.includes(normalized) ? normalized : null;
 };
 
 const clearSessionCookie = (req, res) => {
@@ -37,6 +54,7 @@ router.get('/login', (req, res) => {
     req.session = {};
   }
   req.session.oauthState = 'pending';
+  req.session.postAuthRedirect = resolveFrontendOrigin(req.query.redirect);
   
   console.log('Login initiated - Session initialized');
   
@@ -130,7 +148,13 @@ router.get('/callback', async (req, res) => {
     
     console.log('Five - Session set for user:', user.email, 'UserId:', user.id);
     
-    const frontendUrl = normalizeOrigin(process.env.FRONTEND_URL) || 'http://localhost:3000';
+    const frontendUrl =
+      resolveFrontendOrigin(req.session?.postAuthRedirect) ||
+      resolveFrontendOrigin(process.env.FRONTEND_URL) ||
+      'http://localhost:3000';
+    if (req.session) {
+      req.session.postAuthRedirect = null;
+    }
     res.redirect(`${frontendUrl}/`);
   } catch (error) {
     console.error('OAuth callback error:', error);
@@ -191,9 +215,11 @@ router.post('/logout', (req, res) => {
 
 router.get('/logout', (req, res) => {
   applyNoStore(res);
+  const redirectTo =
+    resolveFrontendOrigin(req.query.redirect) ||
+    resolveFrontendOrigin(process.env.FRONTEND_URL);
   clearSessionCookie(req, res);
 
-  const redirectTo = normalizeOrigin(req.query.redirect) || normalizeOrigin(process.env.FRONTEND_URL);
   if (redirectTo) {
     return res.redirect(`${redirectTo}/`);
   }
