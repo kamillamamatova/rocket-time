@@ -15,6 +15,7 @@ import deleteLogRouter from './routes/deleteLogRoute.js';
 import deleteGoalRouter from './routes/deleteGoalRoute.js';
 
 const app = express();
+app.set('trust proxy', 1);
 
 const normalizeOrigin = (value) => value?.trim().replace(/\/+$/, '');
 const frontendOrigins = (process.env.FRONTEND_URLS || process.env.FRONTEND_URL || '')
