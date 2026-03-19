@@ -11,6 +11,7 @@ import { StreakTracker } from "./components/StreakTracker";
 import { WeeklyTrendChart } from "./components/WeeklyTrendChart";
 import { StreakCalendar } from "./components/StreakCalendar";
 import { ActivityDistributionChart } from "./components/ActivityDistributionChart";
+import { TopActivityCards } from "./components/TopActivityCards";
 import { HabitSubscription } from "./components/HabitSubscription";
 import { CoinSettings } from "./components/CoinSettings";
 import { RecentTransactions } from "./components/RecentTransactions";
@@ -726,6 +727,7 @@ export default function App() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
+            <TopActivityCards timeEntries={timeEntries} calculateCoins={calculateCoins} />
             {timeByCategory.length > 0 ? (
               <>
                 <ChartsSection timeByCategory={timeByCategory} />

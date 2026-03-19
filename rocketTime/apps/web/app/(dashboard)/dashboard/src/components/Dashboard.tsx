@@ -11,6 +11,7 @@ import { StreakTracker } from "./StreakTracker";
 import { WeeklyTrendChart } from "./WeeklyTrendChart";
 import { StreakCalendar } from "./StreakCalendar";
 import { ActivityDistributionChart } from "./ActivityDistributionChart";
+import { TopActivityCards } from "./TopActivityCards";
 import { HabitSubscription } from "./HabitSubscription";
 import { CoinSettings } from "./CoinSettings";
 import { RecentTransactions } from "./RecentTransactions";
@@ -546,6 +547,7 @@ export function Dashboard() {
           </TabsContent>
 
           <TabsContent value="analytics" className="space-y-6">
+            <TopActivityCards timeEntries={timeEntries} calculateCoins={calculateCoins} />
             {timeByCategory.length > 0 ? (
               <>
                 <ChartsSection timeByCategory={timeByCategory} />
