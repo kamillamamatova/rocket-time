@@ -423,35 +423,59 @@ export default function App() {
   
   const coinBalance = totalCoinsAllTime + overdueDeficit;
 
-  // Calculate streak (only count days with goal-linked entries)
-  const goalLinkedEntries = timeEntries.filter((e) => e.goalId);
+  // Calculate streak - count all days where any entry was logged
+  const toLocalDateStr = (d: string | Date) => {
+    const date = new Date(d);
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  };
+
   const sortedDates = Array.from(
-    new Set(goalLinkedEntries.map((e) => new Date(e.date).toDateString()))
-  ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    new Set(timeEntries.map((e) => toLocalDateStr(e.date)))
+  ).sort((a, b) => {
+    const [ay, am, ad] = a.split("-").map(Number);
+    const [by, bm, bd] = b.split("-").map(Number);
+    return new Date(by, bm, bd).getTime() - new Date(ay, am, ad).getTime();
+  });
+
+  const todayKey = toLocalDateStr(new Date());
 
   let streak = 0;
-  const today_str = new Date().toDateString();
-  if (sortedDates.includes(today_str)) {
+  if (sortedDates.includes(todayKey)) {
     streak = 1;
     for (let i = 1; i < sortedDates.length; i++) {
-      const expectedDate = new Date();
-      expectedDate.setDate(expectedDate.getDate() - i);
-      if (sortedDates[i] === expectedDate.toDateString()) {
+      const expected = new Date();
+      expected.setDate(expected.getDate() - i);
+      if (sortedDates[i] === toLocalDateStr(expected)) {
         streak++;
       } else {
         break;
       }
     }
+  } else if (sortedDates.length > 0) {
+    // Also count streak if today has no entry yet but yesterday starts a run
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (sortedDates[0] === toLocalDateStr(yesterday)) {
+      streak = 1;
+      for (let i = 1; i < sortedDates.length; i++) {
+        const expected = new Date();
+        expected.setDate(expected.getDate() - 1 - i);
+        if (sortedDates[i] === toLocalDateStr(expected)) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+    }
   }
 
-  // Daily activity for last 7 days (only goal-linked entries)
+  // Daily activity for last 7 days (all entries)
   const dailyActivity = Array.from({ length: 7 }, (_, i) => {
     const date = new Date();
     date.setDate(date.getDate() - (6 - i));
-    const dateStr = date.toDateString();
     return {
       date: date.toISOString(),
-      hasActivity: sortedDates.includes(dateStr),
+      hasActivity: sortedDates.includes(toLocalDateStr(date)),
     };
   });
 
