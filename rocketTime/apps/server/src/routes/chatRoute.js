@@ -201,8 +201,14 @@ router.post('/chat', async (req, res, next) => {
     const userProfile = { ...user, goals };
 
     console.log('Parsing user message with AI...');
-    const parsedIntent = await parseUserMessage(message, userProfile);
-    console.log('Parsed intent:', parsedIntent);
+    let parsedIntent;
+    try {
+      parsedIntent = await parseUserMessage(message, userProfile);
+      console.log('Parsed intent:', parsedIntent);
+    } catch (aiError) {
+      console.error('Gemini API error:', aiError?.message || aiError);
+      parsedIntent = { intent: 'SMALL_TALK' };
+    }
 
     // If model says SMALL_TALK but text looks like an event, treat as CREATE_EVENT
     if (parsedIntent?.intent === 'SMALL_TALK' && looksLikeEvent(message)) {

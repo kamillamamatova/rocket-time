@@ -5,7 +5,6 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // ⬇️ import the JSON schema
 import ParseSchema from '../schemas/parse.schema.js';
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 
 const SYSTEM = `
 You are a time-management assistant.
@@ -51,7 +50,13 @@ Response:
 `;
 
 export async function parseUserMessage(message, userProfile) {
-  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+  const apiKey = process.env.GOOGLE_API_KEY?.trim();
+  if (!apiKey) {
+    throw new Error('GOOGLE_API_KEY is not set');
+  }
+
+  const client = new GoogleGenerativeAI(apiKey);
+  const model = client.getGenerativeModel({ model: 'gemini-2.0-flash' });
   const contents = `${SYSTEM}
 User goals: ${JSON.stringify(userProfile?.goals ?? [])}
 Message: """${message}"""`;
@@ -60,7 +65,7 @@ Message: """${message}"""`;
     contents: [{ role: 'user', parts: [{ text: contents }] }],
     generationConfig: {
       responseMimeType: 'application/json',
-      responseSchema: ParseSchema              // ⬅️ using the external JSON
+      responseSchema: ParseSchema
     }
   });
 

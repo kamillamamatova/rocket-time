@@ -86,7 +86,8 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
       setMessages((prev) => prev.filter(msg => msg.id !== "loading"));
 
       if (!response.ok) {
-        throw new Error('Failed to get AI response');
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || `Server error (${response.status})`);
       }
 
       const data = await response.json();
@@ -109,7 +110,7 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "I'm sorry, I couldn't connect to the AI service. Please try again.",
+        content: `I'm sorry, I couldn't get a response. ${error instanceof Error ? error.message : "Please try again."}`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
