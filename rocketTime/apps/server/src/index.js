@@ -13,6 +13,7 @@ import getGoalRouter from './routes/getGoalRoute.js';
 import addLogRouter from './routes/addLogRoute.js';
 import deleteLogRouter from './routes/deleteLogRoute.js';
 import deleteGoalRouter from './routes/deleteGoalRoute.js';
+import addGoalRouter from './routes/addGoalRoute.js';
 
 const app = express();
 app.set('trust proxy', 1);
@@ -74,6 +75,7 @@ app.use('/getGoal', getGoalRouter);
 app.use('/addLog', addLogRouter);
 app.use('/deleteLog', deleteLogRouter);
 app.use('/deleteGoal', deleteGoalRouter);
+app.use('/addGoal', addGoalRouter);
 
 app.use((err, _req, res, _next) => {
   console.error(err);

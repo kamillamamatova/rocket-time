@@ -205,13 +205,41 @@ export default function App() {
     }
   };
 
-  const handleAddGoal = (goal: Omit<Goal, "id" | "currentHours">) => {
-    const newGoal: Goal = {
-      ...goal,
-      id: Date.now().toString(),
-      currentHours: 0,
-    };
-    setGoals((prev) => [...prev, newGoal]);
+  const handleAddGoal = async (goal: Omit<Goal, "id" | "currentHours">) => {
+    try {
+      const res = await fetch(`${API_URL}/addGoal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          user_id: user?.id,
+          title: goal.name,
+          target_hours: goal.targetHours,
+          category: goal.category,
+          deadline: goal.deadline || null,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save goal");
+
+      // Reload goals from backend to get the real DB id
+      const goalsRes = await fetch(`${API_URL}/getGoal/${user?.id}`, {
+        credentials: "include",
+      });
+      const data = await goalsRes.json();
+      if (data.goals && Array.isArray(data.goals)) {
+        setGoals(data.goals.map((g: any) => ({
+          id: g.id,
+          name: g.title,
+          targetHours: g.target_hours,
+          currentHours: g.progress_hours,
+          category: g.category,
+          deadline: g.deadline,
+        })));
+      }
+    } catch (err) {
+      console.error("Error saving goal:", err);
+    }
   };
 
   const handleDeleteGoal = async (id: string) => {
