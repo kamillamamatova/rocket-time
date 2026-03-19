@@ -131,6 +131,7 @@ export function LandingPage() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading } = useUser();
   const [scrolled, setScrolled] = useState(false);
+  const [showTop, setShowTop] = useState(false);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -139,7 +140,10 @@ export function LandingPage() {
   }, [isAuthenticated, isLoading, navigate]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 10);
+    const onScroll = () => {
+      setScrolled(window.scrollY > 10);
+      setShowTop(window.scrollY > 400);
+    };
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -440,7 +444,7 @@ export function LandingPage() {
                 gap: 8,
               }}
             >
-              🔗 Start Your Journey
+              Start Your Journey
             </button>
           </div>
         </FadeIn>
@@ -464,6 +468,34 @@ export function LandingPage() {
         </div>
         <span>© 2026 Rocket Time. Treat your time like money.</span>
       </footer>
+
+      {/* BACK TO TOP */}
+      {showTop && (
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          style={{
+            position: "fixed",
+            bottom: 32,
+            right: 32,
+            width: 44,
+            height: 44,
+            borderRadius: "50%",
+            background: "#111",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "1.2rem",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+            transition: "opacity 0.2s",
+          }}
+          title="Back to top"
+        >
+          ↑
+        </button>
+      )}
     </div>
   );
 }
