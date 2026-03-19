@@ -97,9 +97,9 @@ export function GoalProgressAnalytics({ goals, timeEntries }: GoalProgressAnalyt
         </CardTitle>
         <CardDescription>Hours logged vs target, with estimated completion</CardDescription>
       </CardHeader>
-      <CardContent className="flex-1 space-y-5">
-        {goalStats.map(({ goal, pct, hoursRemaining, estCompletion, deadlineStatus }) => (
-          <div key={goal.id} className="space-y-1.5">
+      <CardContent className="flex-1 space-y-8">
+        {goalStats.map(({ goal, pct, deadlineStatus }, idx) => (
+          <div key={goal.id} className={`space-y-1.5 ${idx !== 0 ? "pt-4 border-t border-gray-100" : ""}`}>
             {/* Goal name + status badge */}
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm font-medium truncate">{goal.name}</span>
@@ -131,23 +131,14 @@ export function GoalProgressAnalytics({ goals, timeEntries }: GoalProgressAnalyt
                 {" / "}
                 {goal.targetHours}h &nbsp;·&nbsp; {pct.toFixed(0)}%
               </span>
-              <span>
-                {pct >= 100 ? (
-                  <span className="text-green-600">{goal.currentHours.toFixed(1)}h logged</span>
-                ) : estCompletion ? (
-                  <>Est. done <span className="font-medium text-foreground">{estCompletion}</span></>
-                ) : hoursRemaining > 0 ? (
-                  <span className="text-muted-foreground">{hoursRemaining.toFixed(1)}h remaining</span>
-                ) : null}
-              </span>
+              {goal.deadline && (
+                <span>
+                  Deadline: <span className="font-medium text-foreground">
+                    {new Date(goal.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  </span>
+                </span>
+              )}
             </div>
-
-            {/* Deadline note */}
-            {goal.deadline && (
-              <p className="text-xs text-muted-foreground">
-                Deadline: {new Date(goal.deadline).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-              </p>
-            )}
           </div>
         ))}
       </CardContent>
