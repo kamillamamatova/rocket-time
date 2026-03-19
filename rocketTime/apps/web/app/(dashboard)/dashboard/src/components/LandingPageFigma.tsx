@@ -186,7 +186,6 @@ export function LandingPage() {
         <div style={{ display: "flex", gap: 24, alignItems: "center", fontSize: "0.9rem", color: "#6b7280" }}>
           <span style={{ cursor: "pointer" }} onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>Features</span>
           <span style={{ cursor: "pointer" }} onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>How It Works</span>
-          <span style={{ cursor: "pointer" }} onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}>Pricing</span>
         </div>
         <button
           onClick={() => navigate("/auth")}
