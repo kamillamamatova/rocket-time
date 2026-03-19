@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { CalendarDays } from "lucide-react";
 
@@ -14,9 +15,19 @@ interface StreakCalendarProps {
   calculateCoins: (duration: number, category: string) => number;
 }
 
+interface TooltipState {
+  x: number;
+  y: number;
+  label: string;
+  coinLabel: string;
+  color: string;
+}
+
 const WEEKS_TO_SHOW = 26; // ~6 months
 
 export function StreakCalendar({ timeEntries, calculateCoins }: StreakCalendarProps) {
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+
   const toLocalDateStr = (d: Date) =>
     `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
 
@@ -28,17 +39,14 @@ export function StreakCalendar({ timeEntries, calculateCoins }: StreakCalendarPr
   }
 
   // Build grid: WEEKS_TO_SHOW columns, 7 rows (Sun–Sat)
-  // Start from the Sunday WEEKS_TO_SHOW weeks ago
   const today = new Date();
-  const todayDow = today.getDay(); // 0=Sun
+  const todayDow = today.getDay();
   const gridEnd = new Date(today);
-  // align end to the last day of this week (Saturday)
   gridEnd.setDate(today.getDate() + (6 - todayDow));
 
   const gridStart = new Date(gridEnd);
   gridStart.setDate(gridEnd.getDate() - WEEKS_TO_SHOW * 7 + 1);
 
-  // Build array of all days
   const days: Array<{ date: Date; key: string; netCoins: number | null }> = [];
   const cursor = new Date(gridStart);
   while (cursor <= gridEnd) {
@@ -48,7 +56,6 @@ export function StreakCalendar({ timeEntries, calculateCoins }: StreakCalendarPr
     cursor.setDate(cursor.getDate() + 1);
   }
 
-  // Group into weeks (columns of 7)
   const weeks: typeof days[] = [];
   for (let i = 0; i < days.length; i += 7) {
     weeks.push(days.slice(i, i + 7));
@@ -56,15 +63,14 @@ export function StreakCalendar({ timeEntries, calculateCoins }: StreakCalendarPr
 
   const getColor = (netCoins: number | null, isFuture: boolean) => {
     if (isFuture) return "#f3f4f6";
-    if (netCoins === null) return "#e5e7eb"; // gray – no activity
-    if (netCoins > 0) return "#22c55e";      // green – streak day
-    return "#ef4444";                         // red – negative day
+    if (netCoins === null) return "#e5e7eb";
+    if (netCoins > 0) return "#22c55e";
+    return "#ef4444";
   };
 
   const todayKey = toLocalDateStr(today);
   const DOW_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
 
-  // Month labels: find first day of each month in the grid
   const monthLabels: Array<{ label: string; col: number }> = [];
   weeks.forEach((week, col) => {
     const firstOfMonth = week.find((d) => d.date.getDate() === 1);
@@ -92,7 +98,7 @@ export function StreakCalendar({ timeEntries, calculateCoins }: StreakCalendarPr
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto relative" onMouseLeave={() => setTooltip(null)}>
           <div style={{ minWidth: WEEKS_TO_SHOW * 16 + 32 }}>
             {/* Month labels */}
             <div className="flex ml-8 mb-1">
@@ -132,7 +138,8 @@ export function StreakCalendar({ timeEntries, calculateCoins }: StreakCalendarPr
                     const isFuture = day.date > today;
                     const isToday = day.key === todayKey;
                     const color = getColor(day.netCoins, isFuture);
-                    const label = day.date.toLocaleDateString("en-US", {
+                    const dateLabel = day.date.toLocaleDateString("en-US", {
+                      weekday: "short",
                       month: "short",
                       day: "numeric",
                       year: "numeric",
@@ -145,7 +152,6 @@ export function StreakCalendar({ timeEntries, calculateCoins }: StreakCalendarPr
                     return (
                       <div
                         key={row}
-                        title={`${label}: ${coinLabel}`}
                         style={{
                           width: 14,
                           height: 14,
@@ -154,8 +160,23 @@ export function StreakCalendar({ timeEntries, calculateCoins }: StreakCalendarPr
                           outline: isToday ? "2px solid #7c3aed" : undefined,
                           outlineOffset: isToday ? 1 : undefined,
                           flexShrink: 0,
-                          cursor: "default",
+                          cursor: isFuture ? "default" : "pointer",
                         }}
+                        onMouseEnter={(e) => {
+                          if (isFuture) return;
+                          const rect = (e.target as HTMLElement).getBoundingClientRect();
+                          const parentRect = (e.target as HTMLElement)
+                            .closest(".overflow-x-auto")!
+                            .getBoundingClientRect();
+                          setTooltip({
+                            x: rect.left - parentRect.left + 7,
+                            y: rect.top - parentRect.top - 8,
+                            label: dateLabel,
+                            coinLabel,
+                            color,
+                          });
+                        }}
+                        onMouseLeave={() => setTooltip(null)}
                       />
                     );
                   })}
@@ -163,6 +184,48 @@ export function StreakCalendar({ timeEntries, calculateCoins }: StreakCalendarPr
               ))}
             </div>
           </div>
+
+          {/* Custom tooltip */}
+          {tooltip && (
+            <div
+              style={{
+                position: "absolute",
+                left: tooltip.x,
+                top: tooltip.y,
+                transform: "translate(-50%, -100%)",
+                pointerEvents: "none",
+                zIndex: 50,
+              }}
+            >
+              <div
+                style={{
+                  background: "#1e1e2e",
+                  color: "#fff",
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                  fontSize: 12,
+                  whiteSpace: "nowrap",
+                  boxShadow: "0 4px 12px rgba(0,0,0,0.25)",
+                }}
+              >
+                <div style={{ fontWeight: 600, marginBottom: 2 }}>{tooltip.label}</div>
+                <div style={{ color: tooltip.color === "#22c55e" ? "#86efac" : tooltip.color === "#ef4444" ? "#fca5a5" : "#9ca3af" }}>
+                  {tooltip.coinLabel}
+                </div>
+              </div>
+              {/* Arrow */}
+              <div
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: "5px solid transparent",
+                  borderRight: "5px solid transparent",
+                  borderTop: "5px solid #1e1e2e",
+                  margin: "0 auto",
+                }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Legend + stats */}
