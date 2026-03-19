@@ -548,6 +548,7 @@ export function Dashboard() {
                 onDeleteTask={handleDeleteTask}
                 onEditTask={handleEditTask}
                 isGoogleConnected={isGoogleConnected}
+                isDemo={true}
               />
             </div>
           </TabsContent>

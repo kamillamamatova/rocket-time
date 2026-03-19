@@ -26,16 +26,18 @@ interface TaskManagerProps {
   onDeleteTask: (id: string) => void;
   onEditTask: (id: string, updates: Partial<Task>) => void;
   isGoogleConnected: boolean;
+  isDemo?: boolean;
 }
 
-export function TaskManager({ 
-  tasks, 
-  goals, 
-  onAddTask, 
-  onUpdateTaskStatus, 
+export function TaskManager({
+  tasks,
+  goals,
+  onAddTask,
+  onUpdateTaskStatus,
   onDeleteTask,
   onEditTask,
-  isGoogleConnected 
+  isGoogleConnected,
+  isDemo = false,
 }: TaskManagerProps) {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
   const [taskTitle, setTaskTitle] = useState("");
@@ -120,13 +122,20 @@ export function TaskManager({
       toast.error("Please enter a valid duration");
       return;
     }
-  
+
     const task = tasks.find(t => t.id === taskId);
     if (!task) return;
-  
+
+    // In demo mode, skip the API call and update state directly
+    if (isDemo) {
+      await onUpdateTaskStatus(taskId, "complete", parseFloat(completionDuration), completionCategory);
+      toast.success("Task completed and logged!");
+      cancelCompletion();
+      return;
+    }
+
     // Call parent handler to update status, log time entry, and update goal
     try {
-      // Call your Log Time API
       const res = await fetch(`${API_URL}/addLog`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -146,16 +155,14 @@ export function TaskManager({
         toast.error("Failed to log task time");
         return;
       }
-  
-       toast.success("Task completed and logged!");
-       await onUpdateTaskStatus(taskId, "complete", parseFloat(completionDuration), completionCategory/*, task.goalId*/);
 
+      toast.success("Task completed and logged!");
+      await onUpdateTaskStatus(taskId, "complete", parseFloat(completionDuration), completionCategory);
       cancelCompletion();
     } catch (err) {
       console.error("Error logging task time:", err);
       toast.error("Error logging task time");
     }
-   
   };
 
   const handleAttempted = (taskId: string) => {
