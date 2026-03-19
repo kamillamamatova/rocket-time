@@ -180,7 +180,7 @@ export function LandingPage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 700, fontSize: "1.1rem" }}>
-          <img src="/logo.png" alt="CoinTime logo" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+          <img src="/logo.png" alt="CoinTime logo" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} />
           CoinTime
         </div>
         <div style={{ display: "flex", gap: 24, alignItems: "center", fontSize: "0.9rem", color: "#6b7280" }}>
