@@ -184,9 +184,9 @@ export function LandingPage() {
           CoinTime
         </div>
         <div style={{ display: "flex", gap: 24, alignItems: "center", fontSize: "0.9rem", color: "#6b7280" }}>
-          <span style={{ cursor: "pointer" }}>Features</span>
-          <span style={{ cursor: "pointer" }}>How It Works</span>
-          <span style={{ cursor: "pointer" }}>Pricing</span>
+          <span style={{ cursor: "pointer" }} onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>Features</span>
+          <span style={{ cursor: "pointer" }} onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>How It Works</span>
+          <span style={{ cursor: "pointer" }} onClick={() => document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth" })}>Pricing</span>
         </div>
         <button
           onClick={() => navigate("/auth")}
@@ -303,7 +303,7 @@ export function LandingPage() {
       </section>
 
       {/* FEATURES */}
-      <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
+      <section id="features" style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px" }}>
         <FadeIn>
           <h2 style={{ textAlign: "center", fontSize: "2rem", fontWeight: 800, marginBottom: 8 }}>
             Powerful Features to Maximize Your Time
@@ -364,7 +364,7 @@ export function LandingPage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px 80px", textAlign: "center" }}>
+      <section id="how-it-works" style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px 80px", textAlign: "center" }}>
         <FadeIn>
           <h2 style={{ fontSize: "2rem", fontWeight: 800, marginBottom: 8 }}>How It Works</h2>
           <p style={{ color: "#6b7280", marginBottom: 56 }}>Get started in three simple steps</p>
@@ -406,7 +406,7 @@ export function LandingPage() {
       </section>
 
       {/* CTA BANNER */}
-      <section style={{ maxWidth: 900, margin: "0 auto 80px", padding: "0 24px" }}>
+      <section id="pricing" style={{ maxWidth: 900, margin: "0 auto 80px", padding: "0 24px" }}>
         <FadeIn>
           <div
             style={{
