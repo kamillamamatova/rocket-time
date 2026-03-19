@@ -8,7 +8,8 @@ import { DailyAnalysis } from "./DailyAnalysis";
 import { ChartsSection } from "./ChartsSection";
 import { AICoach } from "./AICoach";
 import { StreakTracker } from "./StreakTracker";
-import { WeeklyTrendChart } from "./WeeklyTrendChart";
+// import { WeeklyTrendChart } from "./WeeklyTrendChart";
+import { DailyComparisonChart } from "./DailyComparisonChart";
 import { StreakCalendar } from "./StreakCalendar";
 import { ActivityDistributionChart } from "./ActivityDistributionChart";
 import { TopActivityCards } from "./TopActivityCards";
@@ -558,15 +559,8 @@ export function Dashboard() {
               <StreakCalendar timeEntries={timeEntries} calculateCoins={calculateCoins} />
               <GoalProgressAnalytics goals={goals} timeEntries={timeEntries} />
             </div>
-            {timeByCategory.length > 0 ? (
-              <WeeklyTrendChart dailyTrend={dailyTrend} />
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  No chart data yet. Start logging your time to see analytics!
-                </p>
-              </div>
-            )}
+            <DailyComparisonChart timeEntries={timeEntries} calculateCoins={calculateCoins} />
+            {/* <WeeklyTrendChart dailyTrend={dailyTrend} /> */}
           </TabsContent>
 
           <TabsContent value="coach" className="space-y-6">

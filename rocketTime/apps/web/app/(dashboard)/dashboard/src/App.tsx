@@ -8,8 +8,9 @@ import { DailyAnalysis } from "./components/DailyAnalysis";
 import { ChartsSection } from "./components/ChartsSection";
 import { AICoach } from "./components/AICoach";
 import { StreakTracker } from "./components/StreakTracker";
-import { WeeklyTrendChart } from "./components/WeeklyTrendChart";
+// import { WeeklyTrendChart } from "./components/WeeklyTrendChart";
 import { StreakCalendar } from "./components/StreakCalendar";
+import { DailyComparisonChart } from "./components/DailyComparisonChart";
 import { ActivityDistributionChart } from "./components/ActivityDistributionChart";
 import { TopActivityCards } from "./components/TopActivityCards";
 import { GoalProgressAnalytics } from "./components/GoalProgressAnalytics";
@@ -738,15 +739,8 @@ export default function App() {
               <StreakCalendar timeEntries={timeEntries} calculateCoins={calculateCoins} />
               <GoalProgressAnalytics goals={goals} timeEntries={timeEntries} />
             </div>
-            {timeByCategory.length > 0 ? (
-              <WeeklyTrendChart dailyTrend={dailyTrend} />
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  No chart data yet. Start logging your time to see analytics!
-                </p>
-              </div>
-            )}
+            <DailyComparisonChart timeEntries={timeEntries} calculateCoins={calculateCoins} />
+            {/* <WeeklyTrendChart dailyTrend={dailyTrend} /> */}
           </TabsContent>
 
           <TabsContent value="coach" className="space-y-6">
