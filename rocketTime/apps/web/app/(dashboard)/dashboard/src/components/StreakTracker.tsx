@@ -49,9 +49,9 @@ export function StreakTracker({ streak, dailyActivity, weekCoins, totalCoins, sh
         }`}>
           <p className="text-sm">
             {streak === 0 && "Start your streak today! Log your first activity."}
-            {streak > 0 && streak < 7 && "Keep going! Build that momentum! 🚀"}
-            {streak >= 7 && streak < 30 && "Amazing! You're building a strong habit! 🔥"}
-            {streak >= 30 && "Incredible! You're a time management champion! 🏆"}
+            {streak > 0 && streak < 7 && "Keep going! Build that momentum!"}
+            {streak >= 7 && streak < 30 && "Amazing! You're building a strong habit!"}
+            {streak >= 30 && "Incredible! You're a time management champion!"}
           </p>
         </div>
 

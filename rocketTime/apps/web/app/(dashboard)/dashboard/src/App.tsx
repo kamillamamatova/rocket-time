@@ -423,15 +423,36 @@ export default function App() {
   
   const coinBalance = totalCoinsAllTime + overdueDeficit;
 
-  // Calculate streak - count all days where any entry was logged
+  // Calculate streak - only count days where productive hours > wasted hours
   const toLocalDateStr = (d: string | Date) => {
     const date = new Date(d);
     return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   };
 
-  const sortedDates = Array.from(
-    new Set(timeEntries.map((e) => toLocalDateStr(e.date)))
-  ).sort((a, b) => {
+  const isProductiveCategory = (cat: string) => {
+    const c = cat.trim().toLowerCase();
+    return c === "productive" || c === "learning" || c === "exercise";
+  };
+  const isWastedCategory = (cat: string) => {
+    const c = cat.trim().toLowerCase();
+    return c === "wasted" || c === "time wasted";
+  };
+
+  // Build a set of dates where the user was net-productive
+  const productiveDays = new Set(
+    Array.from(new Set(timeEntries.map((e) => toLocalDateStr(e.date)))).filter((dateKey) => {
+      const dayEntries = timeEntries.filter((e) => toLocalDateStr(e.date) === dateKey);
+      const productiveHrs = dayEntries
+        .filter((e) => isProductiveCategory(e.category))
+        .reduce((sum, e) => sum + e.duration, 0);
+      const wastedHrs = dayEntries
+        .filter((e) => isWastedCategory(e.category))
+        .reduce((sum, e) => sum + e.duration, 0);
+      return productiveHrs > 0 && productiveHrs > wastedHrs;
+    })
+  );
+
+  const sortedDates = Array.from(productiveDays).sort((a, b) => {
     const [ay, am, ad] = a.split("-").map(Number);
     const [by, bm, bd] = b.split("-").map(Number);
     return new Date(by, bm, bd).getTime() - new Date(ay, am, ad).getTime();
@@ -567,7 +588,7 @@ export default function App() {
   }
 
   // Redirect to auth if not logged in
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !user) {
     return <Navigate to="/auth" replace />;
   }
 
