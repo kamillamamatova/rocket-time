@@ -12,6 +12,7 @@ import { WeeklyTrendChart } from "./components/WeeklyTrendChart";
 import { StreakCalendar } from "./components/StreakCalendar";
 import { ActivityDistributionChart } from "./components/ActivityDistributionChart";
 import { TopActivityCards } from "./components/TopActivityCards";
+import { GoalProgressAnalytics } from "./components/GoalProgressAnalytics";
 import { HabitSubscription } from "./components/HabitSubscription";
 import { CoinSettings } from "./components/CoinSettings";
 import { RecentTransactions } from "./components/RecentTransactions";
@@ -731,24 +732,20 @@ export default function App() {
             {timeByCategory.length > 0 ? (
               <>
                 <ChartsSection timeByCategory={timeByCategory} />
-                <div className="grid gap-6 md:grid-cols-2 items-start">
-                  <ActivityDistributionChart timeByCategory={timeByCategory} />
-                  <StreakCalendar timeEntries={timeEntries} calculateCoins={calculateCoins} />
-                </div>
-                <WeeklyTrendChart dailyTrend={dailyTrend} />
               </>
+            ) : null}
+            <div className="grid gap-6 md:grid-cols-2 items-start">
+              <StreakCalendar timeEntries={timeEntries} calculateCoins={calculateCoins} />
+              <GoalProgressAnalytics goals={goals} timeEntries={timeEntries} />
+            </div>
+            {timeByCategory.length > 0 ? (
+              <WeeklyTrendChart dailyTrend={dailyTrend} />
             ) : (
-              <>
-                <div className="grid gap-6 md:grid-cols-2 items-start">
-                  <ActivityDistributionChart timeByCategory={timeByCategory} />
-                  <StreakCalendar timeEntries={timeEntries} calculateCoins={calculateCoins} />
-                </div>
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    No chart data yet. Start logging your time to see analytics!
-                  </p>
-                </div>
-              </>
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  No chart data yet. Start logging your time to see analytics!
+                </p>
+              </div>
             )}
           </TabsContent>
 
