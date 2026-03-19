@@ -180,8 +180,8 @@ export function LandingPage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 700, fontSize: "1.1rem" }}>
-          <img src="/logo.png" alt="CoinTime logo" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} />
-          CoinTime
+          <img src="/logo.png" alt="Rocket Time logo" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover" }} />
+          Rocket Time
         </div>
         <div style={{ display: "flex", gap: 24, alignItems: "center", fontSize: "0.9rem", color: "#6b7280" }}>
           <span style={{ cursor: "pointer" }} onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>Features</span>
@@ -420,7 +420,7 @@ export function LandingPage() {
               Ready to Value Your Time?
             </h2>
             <p style={{ maxWidth: 560, margin: "0 auto 32px", opacity: 0.92, lineHeight: 1.7, fontSize: "1rem" }}>
-              Join CoinTime today and start turning your hours into achievements. Track your progress,
+              Join Rocket Time today and start turning your hours into achievements. Track your progress,
               earn rewards, and achieve your goals with our gamified time management system.
             </p>
             <button
@@ -459,19 +459,10 @@ export function LandingPage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, color: "#111" }}>
-          <img src="/logo.png" alt="CoinTime logo" style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }} />
-          CoinTime Dashboard
+          <img src="/logo.png" alt="Rocket Time logo" style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }} />
+          Rocket Time Dashboard
         </div>
-        <span>© 2026 CoinTime. Treat your time like money.</span>
-        <div
-          style={{
-            width: 32, height: 32, borderRadius: "50%", background: "#111",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#fff", fontSize: "0.9rem", cursor: "pointer",
-          }}
-        >
-          ?
-        </div>
+        <span>© 2026 Rocket Time. Treat your time like money.</span>
       </footer>
     </div>
   );
