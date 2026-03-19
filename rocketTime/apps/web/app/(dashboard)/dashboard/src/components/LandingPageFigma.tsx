@@ -180,17 +180,8 @@ export function LandingPage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10, fontWeight: 700, fontSize: "1.1rem" }}>
-          <div
-            style={{
-              width: 32, height: 32, borderRadius: "50%",
-              background: "linear-gradient(135deg,#6b7280,#374151)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#fff", fontSize: "0.85rem",
-            }}
-          >
-            🌙
-          </div>
-          Rocket Time
+          <img src="/logo.png" alt="CoinTime logo" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover" }} />
+          CoinTime
         </div>
         <div style={{ display: "flex", gap: 24, alignItems: "center", fontSize: "0.9rem", color: "#6b7280" }}>
           <span style={{ cursor: "pointer" }}>Features</span>
@@ -430,7 +421,7 @@ export function LandingPage() {
               Ready to Value Your Time?
             </h2>
             <p style={{ maxWidth: 560, margin: "0 auto 32px", opacity: 0.92, lineHeight: 1.7, fontSize: "1rem" }}>
-              Join Rocket Time today and start turning your hours into achievements. Track your progress,
+              Join CoinTime today and start turning your hours into achievements. Track your progress,
               earn rewards, and achieve your goals with our gamified time management system.
             </p>
             <button
@@ -469,19 +460,10 @@ export function LandingPage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8, fontWeight: 600, color: "#111" }}>
-          <div
-            style={{
-              width: 26, height: 26, borderRadius: "50%",
-              background: "linear-gradient(135deg,#6b7280,#374151)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              color: "#fff", fontSize: "0.7rem",
-            }}
-          >
-            🌙
-          </div>
-          Rocket Time Dashboard
+          <img src="/logo.png" alt="CoinTime logo" style={{ width: 26, height: 26, borderRadius: "50%", objectFit: "cover" }} />
+          CoinTime Dashboard
         </div>
-        <span>© 2026 Rocket Time. Treat your time like money.</span>
+        <span>© 2026 CoinTime. Treat your time like money.</span>
         <div
           style={{
             width: 32, height: 32, borderRadius: "50%", background: "#111",
