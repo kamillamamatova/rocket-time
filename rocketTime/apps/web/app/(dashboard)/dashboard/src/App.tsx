@@ -423,32 +423,18 @@ export default function App() {
   
   const coinBalance = totalCoinsAllTime + overdueDeficit;
 
-  // Calculate streak - only count days where productive hours > wasted hours
+  // Calculate streak - only count days where net coins for that day are positive
   const toLocalDateStr = (d: string | Date) => {
     const date = new Date(d);
     return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
   };
 
-  const isProductiveCategory = (cat: string) => {
-    const c = cat.trim().toLowerCase();
-    return c === "productive" || c === "learning" || c === "exercise";
-  };
-  const isWastedCategory = (cat: string) => {
-    const c = cat.trim().toLowerCase();
-    return c === "wasted" || c === "time wasted";
-  };
-
-  // Build a set of dates where the user was net-productive
+  // Build a set of dates where the user had positive net coins
   const productiveDays = new Set(
     Array.from(new Set(timeEntries.map((e) => toLocalDateStr(e.date)))).filter((dateKey) => {
       const dayEntries = timeEntries.filter((e) => toLocalDateStr(e.date) === dateKey);
-      const productiveHrs = dayEntries
-        .filter((e) => isProductiveCategory(e.category))
-        .reduce((sum, e) => sum + e.duration, 0);
-      const wastedHrs = dayEntries
-        .filter((e) => isWastedCategory(e.category))
-        .reduce((sum, e) => sum + e.duration, 0);
-      return productiveHrs > 0 && productiveHrs > wastedHrs;
+      const netCoins = dayEntries.reduce((sum, e) => sum + calculateCoins(e.duration, e.category), 0);
+      return netCoins > 0;
     })
   );
 

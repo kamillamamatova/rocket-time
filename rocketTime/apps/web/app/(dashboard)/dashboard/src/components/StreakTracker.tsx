@@ -21,6 +21,9 @@ export function StreakTracker({ streak, dailyActivity, weekCoins, totalCoins, sh
         <CardDescription>
           Current streak: {streak} {streak === 1 ? "day" : "days"}
         </CardDescription>
+        <p className="text-xs text-muted-foreground mt-1">
+          A day counts when your productive coins earned outweigh wasted coins lost.
+        </p>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-7 gap-2">
