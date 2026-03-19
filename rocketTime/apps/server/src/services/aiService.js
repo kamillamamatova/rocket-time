@@ -1,74 +1,71 @@
-//creating a google ai adk agent that will autamte tasks and create events on google calendar using the api
-
 import 'dotenv/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-// ⬇️ import the JSON schema
-import ParseSchema from '../schemas/parse.schema.js';
-
+import Groq from 'groq-sdk';
 
 const SYSTEM = `
 You are a time-management assistant.
-Return ONLY JSON that matches the provided schema.
+Respond ONLY with a valid JSON object.
 
 Classify user messages into one of:
 ["CREATE_EVENT","ADD_TASK","PLAN_WEEK","PRIORITIZE","ASK_FEEDBACK","SMALL_TALK"].
 
 When intent = "CREATE_EVENT", extract:
-event: {
-  title,               // REQUIRED, concise (<= 80 chars), single sentence
-  date,                // REQUIRED, YYYY-MM-DD (resolve "tomorrow", "next Wed", etc.)
-  startTime,           // REQUIRED, HH:MM (24-hour)
-  endTime?,            // HH:MM (24-hour) OR
-  durationMins?,       // integer minutes (use if endTime is missing)
-  location?,           // optional short string
-  attendees?,          // optional list of emails
-  description?         // optional, <= 800 chars, multiline allowed
-}
-
-STRICT RULES:
-- NEVER copy the user’s entire message into "title".
-- "title" must summarize the event in <= 80 characters, no trailing punctuation spam.
-- If the user includes long text, put it in "description" (<= 800 chars) instead.
-- Always include "date" and "startTime". If no duration is given, set "durationMins": 60.
-- Dates must be absolute (YYYY-MM-DD), not relative.
-- Times must be 24-hour HH:MM.
-
-Example:
-User: "Create a meeting tomorrow at 3 PM for 2 hours in the conference room"
-Response:
 {
   "intent": "CREATE_EVENT",
   "event": {
-    "title": "Team meeting",
-    "date": "2024-12-20",
-    "startTime": "15:00",
-    "durationMins": 120,
-    "location": "Conference room",
-    "description": ""
+    "title": "...",        // concise, <= 80 chars
+    "date": "YYYY-MM-DD",  // absolute date
+    "startTime": "HH:MM",  // 24-hour
+    "endTime": "HH:MM",    // optional
+    "durationMins": 60,    // integer, use if endTime missing
+    "location": "...",     // optional
+    "description": "..."   // optional
   }
 }
+
+When intent = "ADD_TASK", extract:
+{
+  "intent": "ADD_TASK",
+  "task": {
+    "title": "...",
+    "estMinutes": 60,      // optional integer
+    "deadline": "YYYY-MM-DD" // optional
+  }
+}
+
+For all other intents just return: { "intent": "<INTENT>" }
+
+RULES:
+- Return ONLY valid JSON, no markdown, no explanation.
+- Dates must be absolute YYYY-MM-DD, never relative.
+- Times must be 24-hour HH:MM.
 `;
 
 export async function parseUserMessage(message, userProfile) {
-  const apiKey = process.env.GOOGLE_API_KEY?.trim();
+  const apiKey = process.env.GROQ_API_KEY?.trim();
   if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY is not set');
+    throw new Error('GROQ_API_KEY is not set');
   }
 
-  const client = new GoogleGenerativeAI(apiKey);
-  const model = client.getGenerativeModel({ model: 'gemini-1.5-flash' });
-  const contents = `${SYSTEM}
-User goals: ${JSON.stringify(userProfile?.goals ?? [])}
-Message: """${message}"""`;
+  const client = new Groq({ apiKey });
 
-  const resp = await model.generateContent({
-    contents: [{ role: 'user', parts: [{ text: contents }] }],
-    generationConfig: {
-      responseMimeType: 'application/json',
-      responseSchema: ParseSchema
-    }
+  const completion = await client.chat.completions.create({
+    model: 'llama3-8b-8192',
+    messages: [
+      { role: 'system', content: SYSTEM },
+      {
+        role: 'user',
+        content: `User goals: ${JSON.stringify(userProfile?.goals ?? [])}\nMessage: """${message}"""`,
+      },
+    ],
+    temperature: 0,
+    max_tokens: 512,
+    response_format: { type: 'json_object' },
   });
 
-  const txt = resp.response.text() || '{"intent":"SMALL_TALK"}';
-  try { return JSON.parse(txt); } catch { return { intent: 'SMALL_TALK' }; }
+  const txt = completion.choices[0]?.message?.content || '{"intent":"SMALL_TALK"}';
+  try {
+    return JSON.parse(txt);
+  } catch {
+    return { intent: 'SMALL_TALK' };
+  }
 }
