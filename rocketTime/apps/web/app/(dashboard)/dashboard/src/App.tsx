@@ -730,11 +730,11 @@ export default function App() {
 
           <TabsContent value="analytics" className="space-y-6">
             <TopActivityCards timeEntries={timeEntries} calculateCoins={calculateCoins} />
-            {timeByCategory.length > 0 ? (
+            {/* {timeByCategory.length > 0 ? (
               <>
                 <ChartsSection timeByCategory={timeByCategory} />
               </>
-            ) : null}
+            ) : null} */}
             <div className="grid gap-6 md:grid-cols-2 items-start">
               <StreakCalendar timeEntries={timeEntries} calculateCoins={calculateCoins} />
               <GoalProgressAnalytics goals={goals} timeEntries={timeEntries} />
