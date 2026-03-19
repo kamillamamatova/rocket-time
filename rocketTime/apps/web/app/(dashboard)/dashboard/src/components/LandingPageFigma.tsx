@@ -65,7 +65,7 @@ const features = [
   },
   {
     title: "Streaks & Habits",
-    desc: "Build consistency with daily streaks. A streak day is earned only when your productive coins outweigh wasted coins — not just by logging any activity.",
+    desc: "Build consistency with daily streaks. A streak day is earned only when your productive coins outweigh wasted coins, not just by logging any activity.",
   },
 ];
 

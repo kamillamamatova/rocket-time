@@ -72,6 +72,11 @@ export function TaskManager({
   };
 
   const startEditing = (task: Task) => {
+    // If already resolved, just reset to pending so action buttons reappear
+    if (task.status !== "pending") {
+      onUpdateTaskStatus(task.id, "pending");
+      return;
+    }
     setEditingTaskId(task.id);
     setEditTitle(task.title);
     setEditGoalId(task.goalId || "");
@@ -326,7 +331,7 @@ export function TaskManager({
                         </>
                       )}
                     </div>
-                    {!isEditing && task.status === "pending" && (
+                    {!isEditing && (
                       <div className="flex gap-1">
                         <Button
                           size="sm"
@@ -343,15 +348,6 @@ export function TaskManager({
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
-                    )}
-                    {!isEditing && task.status !== "pending" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => onDeleteTask(task.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
                     )}
                   </div>
                   
