@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { PieChart, Pie, Cell, BarChart, Bar, ResponsiveContainer, Tooltip, Legend, XAxis, YAxis, CartesianGrid } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { DollarSign, TrendingUp } from "lucide-react";
 
 interface ChartsSectionProps {
@@ -59,15 +59,8 @@ export function ChartsSection({ timeByCategory }: ChartsSectionProps) {
     coins: cat.coins,
   }));
 
-  // Category time distribution for bar chart
-  const categoryTimeData = timeByCategory.map(cat => ({
-    category: cat.category.charAt(0).toUpperCase() + cat.category.slice(1),
-    hours: cat.hours,
-    coins: cat.coins,
-  }));
-
   return (
-    <div className="space-y-6">
+    <div>
       <div className="grid gap-6 md:grid-cols-2">
         {/* ROI Level Breakdown */}
         <Card>
@@ -193,54 +186,6 @@ export function ChartsSection({ timeByCategory }: ChartsSectionProps) {
           </CardContent>
         </Card>
       </div>
-
-      {/* Activity Time Distribution */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Activity Time Distribution</CardTitle>
-          <CardDescription>
-            Time spent on each category of activity
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {timeByCategory.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={categoryTimeData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="category" />
-                <YAxis 
-                  label={{ value: 'Hours', angle: -90, position: 'insideLeft' }}
-                />
-                <Tooltip 
-                  formatter={(value: number, name: string, props: any) => [
-                    `${value.toFixed(1)} hours (${props.payload.coins.toFixed(0)} coins)`,
-                    'Time Spent'
-                  ]}
-                />
-                <Bar 
-                  dataKey="hours" 
-                  fill="#3b82f6"
-                  radius={[8, 8, 0, 0]}
-                >
-                  {categoryTimeData.map((entry, index) => {
-                    const categoryKey = entry.category.toLowerCase();
-                    return (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={COLORS[categoryKey as keyof typeof COLORS] || "#3b82f6"} 
-                      />
-                    );
-                  })}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              <p>No data yet. Start logging activities!</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   );
 }

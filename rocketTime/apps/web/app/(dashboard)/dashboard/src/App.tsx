@@ -9,6 +9,8 @@ import { ChartsSection } from "./components/ChartsSection";
 import { AICoach } from "./components/AICoach";
 import { StreakTracker } from "./components/StreakTracker";
 import { WeeklyTrendChart } from "./components/WeeklyTrendChart";
+import { StreakCalendar } from "./components/StreakCalendar";
+import { ActivityDistributionChart } from "./components/ActivityDistributionChart";
 import { HabitSubscription } from "./components/HabitSubscription";
 import { CoinSettings } from "./components/CoinSettings";
 import { RecentTransactions } from "./components/RecentTransactions";
@@ -726,17 +728,25 @@ export default function App() {
           <TabsContent value="analytics" className="space-y-6">
             {timeByCategory.length > 0 ? (
               <>
-                <ChartsSection
-                  timeByCategory={timeByCategory}
-                />
+                <ChartsSection timeByCategory={timeByCategory} />
+                <div className="grid gap-6 md:grid-cols-2 items-start">
+                  <ActivityDistributionChart timeByCategory={timeByCategory} />
+                  <StreakCalendar timeEntries={timeEntries} calculateCoins={calculateCoins} />
+                </div>
                 <WeeklyTrendChart dailyTrend={dailyTrend} />
               </>
             ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">
-                  No data yet. Start logging your time to see analytics!
-                </p>
-              </div>
+              <>
+                <div className="grid gap-6 md:grid-cols-2 items-start">
+                  <ActivityDistributionChart timeByCategory={timeByCategory} />
+                  <StreakCalendar timeEntries={timeEntries} calculateCoins={calculateCoins} />
+                </div>
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    No chart data yet. Start logging your time to see analytics!
+                  </p>
+                </div>
+              </>
             )}
           </TabsContent>
 
