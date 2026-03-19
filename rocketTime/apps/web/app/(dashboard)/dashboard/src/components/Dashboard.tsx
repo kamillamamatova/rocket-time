@@ -285,11 +285,15 @@ export function Dashboard() {
   
   const coinBalance = totalCoinsAllTime + overdueDeficit;
 
-  // Calculate streak (only count days with goal-linked entries)
-  const goalLinkedEntries = timeEntries.filter((e) => e.goalId);
-  const sortedDates = Array.from(
-    new Set(goalLinkedEntries.map((e) => new Date(e.date).toDateString()))
-  ).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+  // Calculate streak (only count days with positive net coins)
+  const allUniqueDays = Array.from(new Set(timeEntries.map((e) => new Date(e.date).toDateString())));
+  const sortedDates = allUniqueDays
+    .filter((dateStr) => {
+      const dayEntries = timeEntries.filter((e) => new Date(e.date).toDateString() === dateStr);
+      const netCoins = dayEntries.reduce((sum, e) => sum + calculateCoins(e.duration, e.category), 0);
+      return netCoins > 0;
+    })
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
 
   let streak = 0;
   const today_str = new Date().toDateString();
