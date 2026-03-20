@@ -37,6 +37,18 @@ if (!process.env.SESSION_SECRET) {
   process.exit(1);
 }
 
+if (!process.env.TOKEN_ENCRYPTION_KEY) {
+  console.error('FATAL: TOKEN_ENCRYPTION_KEY environment variable is not set. Refusing to start.');
+  process.exit(1);
+}
+{
+  const key = Buffer.from(process.env.TOKEN_ENCRYPTION_KEY, 'hex');
+  if (key.length !== 32) {
+    console.error('FATAL: TOKEN_ENCRYPTION_KEY must be exactly 64 hex characters (32 bytes).');
+    process.exit(1);
+  }
+}
+
 const isProduction = process.env.NODE_ENV === 'production';
 const cookieSameSite = process.env.COOKIE_SAME_SITE || (isProduction ? 'none' : 'lax');
 

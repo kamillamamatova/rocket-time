@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto';
 import { google } from 'googleapis';
 import { getOAuth2Client } from '../config/google.js';
 import { query } from '../services/db.js';
+import { encryptToken } from '../services/tokenCrypto.js';
 
 const router = Router();
 const normalizeOrigin = (value) => value?.trim().replace(/\/+$/, '');
@@ -58,8 +59,6 @@ router.get('/login', (req, res) => {
   req.session.oauthState = oauthState;
   req.session.postAuthRedirect = resolveFrontendOrigin(req.query.redirect);
 
-  console.log('Login initiated - Session initialized');
-
   const oauth2Client = getOAuth2Client();
   const scopes = [
     'https://www.googleapis.com/auth/userinfo.profile',
@@ -92,24 +91,21 @@ router.get('/callback', async (req, res) => {
     }
     req.session.oauthState = null;
 
-    console.log("Here")
     const oauth2Client = getOAuth2Client();
     const { tokens } = await oauth2Client.getToken(code);
-    console.log("One - Got tokens")
     if (!tokens?.access_token) {
       throw new Error('Google token exchange did not return an access token');
     }
-    
+
     // Get user info from Google
     oauth2Client.setCredentials(tokens);
     const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
     const { data: userInfo } = await oauth2.userinfo.get();
-    console.log("Two - Got user info from Google:", userInfo.email)
-    
+
     // Check if user exists in database
     const existingUsers = await query('SELECT * FROM users WHERE email = ?', [userInfo.email]);
     let user = existingUsers[0];
-    
+
     if (!user) {
       // Create new user - let id auto-increment
       const result = await query(
@@ -117,46 +113,40 @@ router.get('/callback', async (req, res) => {
         [userInfo.given_name || '', userInfo.family_name || '', userInfo.email, userInfo.id]
       );
       const userId = result.insertId;
-      console.log("Three - Created new user with ID:", userId)
       user = { id: userId, email: userInfo.email, first_name: userInfo.given_name, last_name: userInfo.family_name };
-    } else {
-      console.log("Three - Found existing user with ID:", user.id)
     }
-    
-    // Store OAuth credentials - user_id should be the integer id as string
+
+    // Store OAuth credentials encrypted at rest
     const expiryDate =
       typeof tokens.expiry_date === 'number' && Number.isFinite(tokens.expiry_date)
         ? new Date(tokens.expiry_date)
         : null;
 
     await query(
-      `INSERT INTO oauth_credentials (user_id, access_token, refresh_token, token_expiry, scope) 
-       VALUES (?, ?, ?, ?, ?) 
-       ON DUPLICATE KEY UPDATE 
-       access_token = VALUES(access_token), 
-       refresh_token = VALUES(refresh_token), 
-       token_expiry = VALUES(token_expiry), 
+      `INSERT INTO oauth_credentials (user_id, access_token, refresh_token, token_expiry, scope)
+       VALUES (?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+       access_token = VALUES(access_token),
+       refresh_token = VALUES(refresh_token),
+       token_expiry = VALUES(token_expiry),
        scope = VALUES(scope)`,
       [
         String(user.id),
-        tokens.access_token,
-        tokens.refresh_token ?? null,
+        encryptToken(tokens.access_token),
+        encryptToken(tokens.refresh_token ?? null),
         expiryDate,
         tokens.scope ?? null
       ]
     );
-    console.log('Four - Stored OAuth credentials')
-    
+
     // Ensure session exists
     if (!req.session) {
       req.session = {};
     }
-    
+
     // Set session with user data
     req.session.userId = user.id;
     req.session.userEmail = user.email;
-    
-    console.log('Five - Session set for user:', user.email, 'UserId:', user.id);
     
     const frontendUrl =
       resolveFrontendOrigin(req.session?.postAuthRedirect) ||
@@ -176,8 +166,6 @@ router.get('/callback', async (req, res) => {
 router.get('/me', async (req, res) => {
   try {
     applyNoStore(res);
-    console.log('Session data:', req.session);
-    
     if (!req.session || !req.session.userId) {
       return res.json({ user: null });
     }

@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { query } from '../services/db.js';
 import { parseUserMessage, getCoachResponse } from '../services/aiService.js';
 import { calendarForUser } from '../config/google.js';
+import { decryptToken } from '../services/tokenCrypto.js';
 
 const router = Router();
 
@@ -199,8 +200,8 @@ async function handleUpdateEventColor(parsedIntent, userId) {
     }
 
     const tokens = {
-      access_token: cred.access_token,
-      refresh_token: cred.refresh_token,
+      access_token: decryptToken(cred.access_token),
+      refresh_token: decryptToken(cred.refresh_token),
       expiry_date: new Date(cred.token_expiry).getTime(),
     };
 
@@ -447,8 +448,8 @@ async function handleCreateEvent(parsedIntent, userId, rawMessage) {
     }
 
     const tokens = {
-      access_token: cred.access_token,
-      refresh_token: cred.refresh_token,
+      access_token: decryptToken(cred.access_token),
+      refresh_token: decryptToken(cred.refresh_token),
       expiry_date: new Date(cred.token_expiry).getTime(),
     };
 
