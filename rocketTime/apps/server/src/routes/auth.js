@@ -1,5 +1,6 @@
 //google OAuth login/callback
 import { Router } from 'express';
+import { randomBytes } from 'crypto';
 import { google } from 'googleapis';
 import { getOAuth2Client } from '../config/google.js';
 import { query } from '../services/db.js';
@@ -53,34 +54,44 @@ router.get('/login', (req, res) => {
   if (!req.session) {
     req.session = {};
   }
-  req.session.oauthState = 'pending';
+  const oauthState = randomBytes(32).toString('hex');
+  req.session.oauthState = oauthState;
   req.session.postAuthRedirect = resolveFrontendOrigin(req.query.redirect);
-  
+
   console.log('Login initiated - Session initialized');
-  
+
   const oauth2Client = getOAuth2Client();
   const scopes = [
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/userinfo.email',
     'https://www.googleapis.com/auth/calendar'
   ];
-  
+
   const authUrl = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: scopes,
-    prompt: 'consent'
+    prompt: 'consent',
+    state: oauthState,
   });
-  
+
   res.redirect(authUrl);
 });
 
 // Handle OAuth callback
 router.get('/callback', async (req, res) => {
   try {
-    const { code } = req.query;
+    const { code, state } = req.query;
     if (!code) {
       return res.status(400).json({ error: 'Authorization code not provided' });
     }
+
+    // Validate CSRF state
+    const expectedState = req.session?.oauthState;
+    if (!expectedState || !state || state !== expectedState) {
+      return res.status(403).json({ error: 'Invalid OAuth state — possible CSRF attempt' });
+    }
+    req.session.oauthState = null;
+
     console.log("Here")
     const oauth2Client = getOAuth2Client();
     const { tokens } = await oauth2Client.getToken(code);
