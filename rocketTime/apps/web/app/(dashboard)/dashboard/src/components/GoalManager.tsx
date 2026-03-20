@@ -20,7 +20,7 @@ export interface Goal {
 
 interface GoalManagerProps {
   goals: Goal[];
-  onAddGoal: (goal: Omit<Goal, "id" | "currentHours">) => void;
+  onAddGoal: (goal: Omit<Goal, "id" | "currentHours">) => Promise<void>;
   onDeleteGoal: (id: string) => void;
 }
 
@@ -31,7 +31,7 @@ export function GoalManager({ goals, onAddGoal, onDeleteGoal }: GoalManagerProps
   const [deadline, setDeadline] = useState("");
   const [showForm, setShowForm] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!goalName || !targetHours) {
@@ -45,19 +45,22 @@ export function GoalManager({ goals, onAddGoal, onDeleteGoal }: GoalManagerProps
       return;
     }
 
-    onAddGoal({
-      name: goalName,
-      targetHours: hours,
-      category: category,
-      deadline: deadline || undefined,
-    });
-
-    toast.success(`Goal "${goalName}" created!`);
-    setGoalName("");
-    setTargetHours("");
-    setCategory("productive");
-    setDeadline("");
-    setShowForm(false);
+    try {
+      await onAddGoal({
+        name: goalName,
+        targetHours: hours,
+        category: category,
+        deadline: deadline || undefined,
+      });
+      toast.success(`Goal "${goalName}" created!`);
+      setGoalName("");
+      setTargetHours("");
+      setCategory("productive");
+      setDeadline("");
+      setShowForm(false);
+    } catch {
+      toast.error("Failed to save goal. Please try again.");
+    }
   };
 
   return (

@@ -144,7 +144,7 @@ export function Dashboard() {
     }
   };
 
-  const handleAddGoal = (goal: Omit<Goal, "id" | "currentHours">) => {
+  const handleAddGoal = async (goal: Omit<Goal, "id" | "currentHours">) => {
     const newGoal: Goal = {
       ...goal,
       id: Date.now().toString(),
