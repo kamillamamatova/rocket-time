@@ -49,7 +49,7 @@ export async function parseUserMessage(message, userProfile) {
   const client = new Groq({ apiKey });
 
   const completion = await client.chat.completions.create({
-    model: 'llama3-8b-8192',
+    model: 'llama-3.3-70b-versatile',
     messages: [
       { role: 'system', content: SYSTEM },
       {
