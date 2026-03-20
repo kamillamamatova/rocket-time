@@ -69,12 +69,8 @@ export function CoinSettings({
       onToggleGoogleCalendar();
       toast.success("Disconnected from Google Calendar");
     } else {
-      // Simulate OAuth flow
-      toast.info("Redirecting to Google OAuth...");
-      setTimeout(() => {
-        onToggleGoogleCalendar();
-        toast.success("Connected to Google Calendar!");
-      }, 1500);
+      const origin = encodeURIComponent(window.location.origin);
+      window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3001'}/auth/login?scope=calendar&redirect=${origin}`;
     }
   };
 

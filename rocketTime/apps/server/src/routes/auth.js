@@ -51,7 +51,6 @@ const clearSessionCookie = (req, res) => {
 
 // Generate Google OAuth URL and redirect user
 router.get('/login', (req, res) => {
-  // Initialize session to track OAuth flow
   if (!req.session) {
     req.session = {};
   }
@@ -59,17 +58,22 @@ router.get('/login', (req, res) => {
   req.session.oauthState = oauthState;
   req.session.postAuthRedirect = resolveFrontendOrigin(req.query.redirect);
 
+  const calendarRequested = req.query.scope === 'calendar';
+  req.session.calendarRequested = calendarRequested;
+
   const oauth2Client = getOAuth2Client();
   const scopes = [
     'https://www.googleapis.com/auth/userinfo.profile',
     'https://www.googleapis.com/auth/userinfo.email',
-    'https://www.googleapis.com/auth/calendar'
   ];
+  if (calendarRequested) {
+    scopes.push('https://www.googleapis.com/auth/calendar');
+  }
 
   const authUrl = oauth2Client.generateAuthUrl({
-    access_type: 'offline',
+    access_type: calendarRequested ? 'offline' : 'online',
     scope: scopes,
-    prompt: 'consent',
+    ...(calendarRequested && { prompt: 'consent' }),
     state: oauthState,
   });
 
@@ -125,31 +129,33 @@ router.get('/callback', async (req, res) => {
       user = { id: userId, email: userInfo.email, first_name: userInfo.given_name, last_name: userInfo.family_name };
     }
 
-    // Store OAuth credentials encrypted at rest (non-fatal — only needed for AI Calendar)
-    try {
-      const expiryDate =
-        typeof tokens.expiry_date === 'number' && Number.isFinite(tokens.expiry_date)
-          ? new Date(tokens.expiry_date)
-          : null;
+    // Store OAuth credentials only when calendar scope was requested (non-fatal)
+    if (req.session?.calendarRequested) {
+      try {
+        const expiryDate =
+          typeof tokens.expiry_date === 'number' && Number.isFinite(tokens.expiry_date)
+            ? new Date(tokens.expiry_date)
+            : null;
 
-      await query(
-        `INSERT INTO oauth_credentials (user_id, access_token, refresh_token, token_expiry, scope)
-         VALUES (?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE
-         access_token = VALUES(access_token),
-         refresh_token = VALUES(refresh_token),
-         token_expiry = VALUES(token_expiry),
-         scope = VALUES(scope)`,
-        [
-          String(user.id),
-          encryptToken(tokens.access_token),
-          encryptToken(tokens.refresh_token ?? null),
-          expiryDate,
-          tokens.scope ?? null
-        ]
-      );
-    } catch (tokenErr) {
-      console.error('OAuth token storage failed (AI Calendar unavailable):', tokenErr.message);
+        await query(
+          `INSERT INTO oauth_credentials (user_id, access_token, refresh_token, token_expiry, scope)
+           VALUES (?, ?, ?, ?, ?)
+           ON DUPLICATE KEY UPDATE
+           access_token = VALUES(access_token),
+           refresh_token = VALUES(refresh_token),
+           token_expiry = VALUES(token_expiry),
+           scope = VALUES(scope)`,
+          [
+            String(user.id),
+            encryptToken(tokens.access_token),
+            encryptToken(tokens.refresh_token ?? null),
+            expiryDate,
+            tokens.scope ?? null
+          ]
+        );
+      } catch (tokenErr) {
+        console.error('OAuth token storage failed (AI Calendar unavailable):', tokenErr.message);
+      }
     }
 
     // Ensure session exists
@@ -167,6 +173,7 @@ router.get('/callback', async (req, res) => {
       'http://localhost:3000';
     if (req.session) {
       req.session.postAuthRedirect = null;
+      req.session.calendarRequested = null;
     }
     console.log('OAuth callback: login successful, userId:', user.id);
     res.redirect(`${frontendUrl}/`);

@@ -65,7 +65,7 @@ export function AuthPage() {
 
             <div className="text-center text-sm text-muted-foreground space-y-2">
               <p>Sign in with Google to access your dashboard.</p>
-              <p className="text-xs">Secure authentication via Google OAuth</p>
+              <p className="text-xs">Google Calendar access can be enabled separately in Settings.</p>
             </div>
           </CardContent>
         </Card>
