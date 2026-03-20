@@ -78,7 +78,9 @@ function parseDateTime(date, time) {
     if (!normDate || !normTime) return null;
     const [Y, M, D] = normDate.split('-').map(Number);
     const [h, m] = normTime.split(':').map(Number);
-    return new Date(Y, M - 1, D, h, m, 0, 0).toISOString();
+    // Return a timezone-naive datetime string (no Z, no offset) so that Google
+    // Calendar interprets it in the event's timeZone field rather than as UTC.
+    return `${String(Y).padStart(4,'0')}-${String(M).padStart(2,'0')}-${String(D).padStart(2,'0')}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
   } catch {
     return null;
   }
