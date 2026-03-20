@@ -123,7 +123,7 @@ export default function App() {
             id: g.id,
             name: g.title,
             targetHours: g.target_hours,
-            currentHours: g.progress_hours,
+            currentHours: g.progress_hours ?? 0,
             category: g.category,
             deadline: g.deadline,
           }));
@@ -236,7 +236,7 @@ export default function App() {
           id: g.id,
           name: g.title,
           targetHours: g.target_hours,
-          currentHours: g.progress_hours,
+          currentHours: g.progress_hours ?? 0,
           category: g.category,
           deadline: g.deadline,
         })));
