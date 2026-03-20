@@ -28,8 +28,10 @@ When intent = "ADD_TASK":
 { "intent": "ADD_TASK", "task": { "title": "...", "estMinutes": 60, "deadline": "YYYY-MM-DD" } }
 
 When intent = "UPDATE_EVENT_COLOR" (user wants to change the color of a calendar event):
-{ "intent": "UPDATE_EVENT_COLOR", "eventTitle": "...", "color": "..." }
-- "eventTitle": keywords from the event name the user is referring to (e.g. "Zoom Meeting")
+{ "intent": "UPDATE_EVENT_COLOR", "eventTitle": "...", "eventStartTime": "HH:MM", "eventDate": "YYYY-MM-DD", "color": "..." }
+- "eventTitle": keywords from the event name (leave empty string "" if not mentioned)
+- "eventStartTime": 24-hour start time of the event if the user mentions it (e.g. "1pm" → "13:00"), otherwise omit
+- "eventDate": date of the event if mentioned as YYYY-MM-DD, otherwise omit
 - "color": the color name the user mentioned (e.g. "blue", "red", "green", "purple")
 
 For "ACTION_OTHER" or "CONVERSATION": { "intent": "CONVERSATION" }

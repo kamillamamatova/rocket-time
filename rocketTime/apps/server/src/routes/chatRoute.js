@@ -167,11 +167,23 @@ const COLOR_MAP = {
   pink: '4', purple: '3', yellow: '5',
 };
 
+// Extract HH:MM from a Google Calendar dateTime string (respects timezone offset)
+function getLocalHHMM(dateTimeStr) {
+  if (!dateTimeStr) return null;
+  // dateTimeStr can be "2026-03-20T13:00:00-04:00" or "2026-03-20T13:00:00Z"
+  // We want the wall-clock time in the event's local timezone, which is the
+  // time portion before any offset — i.e. just parse "HH:MM" from the string.
+  const m = dateTimeStr.match(/T(\d{2}):(\d{2})/);
+  if (!m) return null;
+  return `${m[1]}:${m[2]}`;
+}
+
 async function handleUpdateEventColor(parsedIntent, userId) {
   try {
-    const { eventTitle, color } = parsedIntent;
-    if (!eventTitle || !color) {
-      return { intent: 'UPDATE_EVENT_COLOR', message: 'Please specify both the event name and the color you want.' };
+    const { eventTitle = '', eventStartTime, eventDate, color } = parsedIntent;
+
+    if (!color) {
+      return { intent: 'UPDATE_EVENT_COLOR', message: 'Please specify the color you want.' };
     }
 
     const colorId = COLOR_MAP[color.toLowerCase().trim()];
@@ -194,26 +206,52 @@ async function handleUpdateEventColor(parsedIntent, userId) {
 
     const calendar = await calendarForUser(tokens);
 
-    // Search upcoming + recent events for a title match
-    const now = new Date();
-    const past = new Date(now); past.setDate(past.getDate() - 7);
-    const future = new Date(now); future.setDate(future.getDate() + 60);
+    // Narrow the search window to just the event's date if provided
+    let timeMin, timeMax;
+    if (eventDate) {
+      timeMin = new Date(`${eventDate}T00:00:00`).toISOString();
+      timeMax = new Date(`${eventDate}T23:59:59`).toISOString();
+    } else {
+      const now = new Date();
+      const past = new Date(now); past.setDate(past.getDate() - 7);
+      const future = new Date(now); future.setDate(future.getDate() + 60);
+      timeMin = past.toISOString();
+      timeMax = future.toISOString();
+    }
 
     const listRes = await calendar.events.list({
       calendarId: 'primary',
-      timeMin: past.toISOString(),
-      timeMax: future.toISOString(),
+      timeMin,
+      timeMax,
       singleEvents: true,
       orderBy: 'startTime',
-      maxResults: 50,
+      maxResults: 100,
     });
 
     const events = listRes.data.items || [];
     const keyword = eventTitle.toLowerCase();
-    const match = events.find(e => (e.summary || '').toLowerCase().includes(keyword));
+
+    // Score each event: time match is highest priority, then title match
+    const scored = events.map(e => {
+      let score = 0;
+      const title = (e.summary || '').toLowerCase();
+      const startHHMM = getLocalHHMM(e.start?.dateTime || '');
+
+      if (eventStartTime && startHHMM === eventStartTime) score += 100;
+      if (keyword && title.includes(keyword)) score += 10;
+      // Partial time match (same hour)
+      if (eventStartTime && startHHMM && startHHMM.slice(0, 2) === eventStartTime.slice(0, 2)) score += 5;
+
+      return { event: e, score };
+    });
+
+    const best = scored.filter(s => s.score > 0).sort((a, b) => b.score - a.score)[0];
+    const match = best?.event;
 
     if (!match) {
-      return { intent: 'UPDATE_EVENT_COLOR', message: `I couldn't find an event matching "${eventTitle}" in your calendar (searched past 7 days and next 60 days).` };
+      const hint = eventStartTime ? ` at ${eventStartTime}` : '';
+      const titleHint = keyword ? ` matching "${eventTitle}"` : '';
+      return { intent: 'UPDATE_EVENT_COLOR', message: `I couldn't find an event${titleHint}${hint} in your calendar.` };
     }
 
     await calendar.events.patch({
