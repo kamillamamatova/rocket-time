@@ -1,11 +1,11 @@
 import db from './db.js';
 
-export async function addGoals(logbody){
+export async function addGoals(logbody, userId){
     try{
         const result = await db.query(
             ` INSERT INTO goals(user_id, title, target_hours, category, deadline)
       VALUES (?, ?, ?, ?, ?)`,
-            [logbody.user_id, logbody.title, logbody.target_hours, 
+            [userId, logbody.title, logbody.target_hours,
                 logbody.category, logbody.deadline]
         );
 
