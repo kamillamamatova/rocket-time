@@ -75,8 +75,8 @@ router.post('/goals', requireAuth, async (req, res, next) => {
     }
 
     const result = await query(
-      'INSERT INTO goals (user_id, title, target_hours, category, deadline, description, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [userId, title, target_hours || null, category || 'productive', deadline || null, description || null, 'not started']
+      'INSERT INTO goals (user_id, title, target_hours, category, deadline, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, title, target_hours || null, category || 'productive', deadline || null, 'not started']
     );
 
     const newGoal = await query('SELECT * FROM goals WHERE id = ?', [result.insertId]);
