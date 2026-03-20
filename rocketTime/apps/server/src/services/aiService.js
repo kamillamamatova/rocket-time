@@ -17,41 +17,27 @@ You are an intent classifier for a time-management app.
 Respond ONLY with a valid JSON object — no markdown, no explanation.
 
 Classify the message into exactly one of:
-["CREATE_EVENT", "ADD_TASK", "ACTION_OTHER", "CONVERSATION"]
+["CREATE_EVENT", "ADD_TASK", "UPDATE_EVENT_COLOR", "ACTION_OTHER", "CONVERSATION"]
 
-Use "CONVERSATION" for anything that is not a clear request to create a calendar
-event or add a task (questions, advice requests, reflections, planning chat, etc.).
+Use "CONVERSATION" for anything that is not a clear actionable calendar/task request.
 
 When intent = "CREATE_EVENT":
-{
-  "intent": "CREATE_EVENT",
-  "event": {
-    "title": "...",
-    "date": "YYYY-MM-DD",
-    "startTime": "HH:MM",
-    "endTime": "HH:MM",
-    "durationMins": 60,
-    "location": "...",
-    "description": "..."
-  }
-}
+{ "intent": "CREATE_EVENT", "event": { "title": "...", "date": "YYYY-MM-DD", "startTime": "HH:MM", "endTime": "HH:MM", "durationMins": 60, "location": "...", "description": "..." } }
 
 When intent = "ADD_TASK":
-{
-  "intent": "ADD_TASK",
-  "task": {
-    "title": "...",
-    "estMinutes": 60,
-    "deadline": "YYYY-MM-DD"
-  }
-}
+{ "intent": "ADD_TASK", "task": { "title": "...", "estMinutes": 60, "deadline": "YYYY-MM-DD" } }
 
-For "ACTION_OTHER" or "CONVERSATION": { "intent": "ACTION_OTHER" } or { "intent": "CONVERSATION" }
+When intent = "UPDATE_EVENT_COLOR" (user wants to change the color of a calendar event):
+{ "intent": "UPDATE_EVENT_COLOR", "eventTitle": "...", "color": "..." }
+- "eventTitle": keywords from the event name the user is referring to (e.g. "Zoom Meeting")
+- "color": the color name the user mentioned (e.g. "blue", "red", "green", "purple")
+
+For "ACTION_OTHER" or "CONVERSATION": { "intent": "CONVERSATION" }
 
 RULES:
 - Dates must be absolute YYYY-MM-DD.
 - Times must be 24-hour HH:MM.
-- Only classify as CREATE_EVENT / ADD_TASK when the user is clearly requesting that action.
+- Only classify as CREATE_EVENT / ADD_TASK / UPDATE_EVENT_COLOR when the user is clearly requesting that action.
 `;
 
 export async function parseUserMessage(message, userProfile) {
@@ -99,6 +85,7 @@ You will receive:
 Use this data to give concrete, personalized answers. Reference their actual goals and numbers.
 If you don't have enough data (no goals, no logs), acknowledge it briefly and ask what they're working on.
 Do NOT say "I'm here to help" or repeat the user's question back to them.
+You CANNOT create, modify, delete, or recolor calendar events. If the user asks you to do any of those things, tell them clearly that you can't do that through chat and explain what they can do instead (e.g. to create an event, give a specific instruction like "Schedule X on date at time").
 `;
 
 export async function getCoachResponse(message, context, history) {

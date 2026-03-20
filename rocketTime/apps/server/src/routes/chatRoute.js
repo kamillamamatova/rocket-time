@@ -158,6 +158,78 @@ function extractDateTimeFromText(text) {
   return { date, startTime, endTime };
 }
 
+// Google Calendar colorId map
+const COLOR_MAP = {
+  lavender: '1', sage: '2', grape: '3', flamingo: '4',
+  banana: '5', tangerine: '6', orange: '6', peacock: '7',
+  teal: '7', blueberry: '8', blue: '8', navy: '8',
+  basil: '9', green: '9', tomato: '10', red: '10',
+  pink: '4', purple: '3', yellow: '5',
+};
+
+async function handleUpdateEventColor(parsedIntent, userId) {
+  try {
+    const { eventTitle, color } = parsedIntent;
+    if (!eventTitle || !color) {
+      return { intent: 'UPDATE_EVENT_COLOR', message: 'Please specify both the event name and the color you want.' };
+    }
+
+    const colorId = COLOR_MAP[color.toLowerCase().trim()];
+    if (!colorId) {
+      const available = [...new Set(Object.keys(COLOR_MAP))].join(', ');
+      return { intent: 'UPDATE_EVENT_COLOR', message: `I don't recognize the color "${color}". Available colors: ${available}.` };
+    }
+
+    const creds = await query('SELECT * FROM oauth_credentials WHERE user_id = ?', [userId]);
+    const cred = creds[0];
+    if (!cred || !cred.access_token) {
+      return { intent: 'UPDATE_EVENT_COLOR', message: 'Please connect your Google Calendar first.' };
+    }
+
+    const tokens = {
+      access_token: cred.access_token,
+      refresh_token: cred.refresh_token,
+      expiry_date: new Date(cred.token_expiry).getTime(),
+    };
+
+    const calendar = await calendarForUser(tokens);
+
+    // Search upcoming + recent events for a title match
+    const now = new Date();
+    const past = new Date(now); past.setDate(past.getDate() - 7);
+    const future = new Date(now); future.setDate(future.getDate() + 60);
+
+    const listRes = await calendar.events.list({
+      calendarId: 'primary',
+      timeMin: past.toISOString(),
+      timeMax: future.toISOString(),
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 50,
+    });
+
+    const events = listRes.data.items || [];
+    const keyword = eventTitle.toLowerCase();
+    const match = events.find(e => (e.summary || '').toLowerCase().includes(keyword));
+
+    if (!match) {
+      return { intent: 'UPDATE_EVENT_COLOR', message: `I couldn't find an event matching "${eventTitle}" in your calendar (searched past 7 days and next 60 days).` };
+    }
+
+    await calendar.events.patch({
+      calendarId: 'primary',
+      eventId: match.id,
+      resource: { colorId },
+    });
+
+    const colorName = color.charAt(0).toUpperCase() + color.slice(1).toLowerCase();
+    return { intent: 'UPDATE_EVENT_COLOR', message: `Done! "${match.summary}" has been updated to ${colorName}.` };
+  } catch (error) {
+    console.error('Update event color error:', error);
+    return { intent: 'UPDATE_EVENT_COLOR', message: 'Sorry, I couldn\'t update the event color. Please try again.' };
+  }
+}
+
 // Clean up noisy titles/descriptions
 function stripEmojisAndWeird(title) {
   return (title || '')
@@ -228,6 +300,11 @@ router.post('/chat', async (req, res) => {
 
     if (intent === 'ADD_TASK') {
       const response = await handleAddTask(parsedIntent, userId);
+      return res.json(response);
+    }
+
+    if (intent === 'UPDATE_EVENT_COLOR') {
+      const response = await handleUpdateEventColor(parsedIntent, userId);
       return res.json(response);
     }
 
