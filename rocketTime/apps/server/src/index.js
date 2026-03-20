@@ -32,6 +32,11 @@ const allowedOrigins = [
   ])
 ];
 
+if (!process.env.SESSION_SECRET) {
+  console.error('FATAL: SESSION_SECRET environment variable is not set. Refusing to start.');
+  process.exit(1);
+}
+
 const isProduction = process.env.NODE_ENV === 'production';
 const cookieSameSite = process.env.COOKIE_SAME_SITE || (isProduction ? 'none' : 'lax');
 
@@ -55,7 +60,7 @@ app.use(express.json());
 // app.use(session({ name: 'sid', secret: process.env.SESSION_SECRET || 'dev', httpOnly: true }));
 app.use(session({
   name: 'sid',
-  keys: [process.env.SESSION_SECRET || 'dev'], // cookie-session expects keys[]
+  keys: [process.env.SESSION_SECRET], // cookie-session expects keys[]
   maxAge: 30 * 24 * 60 * 60 * 1000,            // 30 days
   sameSite: cookieSameSite,
   secure: isProduction,

@@ -155,7 +155,6 @@ router.get('/callback', async (req, res) => {
     // Set session with user data
     req.session.userId = user.id;
     req.session.userEmail = user.email;
-    req.session.oauthState = 'completed';
     
     console.log('Five - Session set for user:', user.email, 'UserId:', user.id);
     
