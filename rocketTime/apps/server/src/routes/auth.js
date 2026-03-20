@@ -78,16 +78,25 @@ router.get('/login', (req, res) => {
 
 // Handle OAuth callback
 router.get('/callback', async (req, res) => {
+  const fallbackFrontend =
+    resolveFrontendOrigin(process.env.FRONTEND_URL) || 'http://localhost:3000';
+
   try {
     const { code, state } = req.query;
     if (!code) {
-      return res.status(400).json({ error: 'Authorization code not provided' });
+      console.error('OAuth callback: no code provided');
+      return res.redirect(`${fallbackFrontend}/?error=auth_failed`);
     }
 
     // Validate CSRF state
     const expectedState = req.session?.oauthState;
     if (!expectedState || !state || state !== expectedState) {
-      return res.status(403).json({ error: 'Invalid OAuth state — possible CSRF attempt' });
+      console.error('OAuth callback: state mismatch', {
+        hasExpected: !!expectedState,
+        hasReturned: !!state,
+        match: state === expectedState,
+      });
+      return res.redirect(`${fallbackFrontend}/?error=auth_failed`);
     }
     req.session.oauthState = null;
 
@@ -151,7 +160,7 @@ router.get('/callback', async (req, res) => {
     // Set session with user data
     req.session.userId = user.id;
     req.session.userEmail = user.email;
-    
+
     const frontendUrl =
       resolveFrontendOrigin(req.session?.postAuthRedirect) ||
       resolveFrontendOrigin(process.env.FRONTEND_URL) ||
@@ -159,10 +168,11 @@ router.get('/callback', async (req, res) => {
     if (req.session) {
       req.session.postAuthRedirect = null;
     }
+    console.log('OAuth callback: login successful, userId:', user.id);
     res.redirect(`${frontendUrl}/`);
   } catch (error) {
-    console.error('OAuth callback error:', error);
-    res.status(500).json({ error: 'Authentication failed' });
+    console.error('OAuth callback error:', error.message);
+    res.redirect(`${fallbackFrontend}/?error=auth_failed`);
   }
 });
 
