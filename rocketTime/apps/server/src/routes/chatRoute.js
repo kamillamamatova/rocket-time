@@ -104,14 +104,18 @@ function extractDateTimeFromText(text) {
     if (mTextDate) dateStr = mTextDate[0];
   }
 
+  // Strip ISO dates (e.g. "2026-03-20") before scanning for times so the
+  // dashes inside the date string are not mistaken for a time-range separator.
+  const textForTime = text.replace(isoDateRe, ' ');
+
   let startRaw = null, endRaw = null;
 
-  const mRange = text.match(timeRangeRe);
+  const mRange = textForTime.match(timeRangeRe);
   if (mRange) {
     startRaw = (mRange[1] || '').trim();        // may contain am/pm
     endRaw   = (mRange[3] || '').trim();        // may omit am/pm
   } else {
-    const mSingle = text.match(singleTimeRe);
+    const mSingle = textForTime.match(singleTimeRe);
     if (mSingle) startRaw = (mSingle[1] || '').trim();
   }
 
@@ -197,22 +201,19 @@ router.post('/chat', async (req, res) => {
     // Fetch user context
     const goals = await query('SELECT * FROM goals WHERE user_id = ?', [userId]);
 
-    // Fast heuristic: if it clearly looks like an event, skip the classifier
-    const isObviousEvent = looksLikeEvent(message);
+    // Run intent classifier to detect actionable requests
+    let parsedIntent;
+    try {
+      parsedIntent = await parseUserMessage(message, { goals });
+      console.log('Parsed intent:', parsedIntent.intent);
+    } catch (aiError) {
+      console.error('Intent parser error:', aiError?.message || aiError);
+      parsedIntent = { intent: 'CONVERSATION' };
+    }
 
-    let parsedIntent = null;
-
-    if (isObviousEvent) {
-      parsedIntent = { intent: 'CREATE_EVENT', event: {} };
-    } else {
-      // Run intent classifier to detect actionable requests
-      try {
-        parsedIntent = await parseUserMessage(message, { goals });
-        console.log('Parsed intent:', parsedIntent.intent);
-      } catch (aiError) {
-        console.error('Intent parser error:', aiError?.message || aiError);
-        parsedIntent = { intent: 'CONVERSATION' };
-      }
+    // If classifier missed an obvious event, override intent (but keep any extracted fields)
+    if (parsedIntent?.intent === 'CONVERSATION' && looksLikeEvent(message)) {
+      parsedIntent = { intent: 'CREATE_EVENT', event: parsedIntent.event ?? {} };
     }
 
     const intent = parsedIntent?.intent;
