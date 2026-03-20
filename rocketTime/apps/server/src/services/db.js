@@ -19,7 +19,7 @@ export const pool = mysql.createPool({
 
 // Convenience query helper (prepared statements)
 export async function query(sql, params = []) {
-  const [results] = await pool.execute(sql, params);
+  const [results] = await pool.query(sql, params);
   return results;
 }
 
