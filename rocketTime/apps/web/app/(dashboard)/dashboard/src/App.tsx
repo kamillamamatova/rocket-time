@@ -248,10 +248,10 @@ export default function App() {
 
   const handleDeleteGoal = async (id: string) => {
     try {
-      const res = await fetch(`${API_URL}/deleteGoal/${id}`, {
+      const res = await fetch(`${API_URL}/calendar/goals/${id}`, {
         method: "DELETE",
         credentials: "include",
-      }); 
+      });
 
       const data = await res.json();  
 
@@ -271,9 +271,8 @@ export default function App() {
   const handleDeleteEntry = async (id: string) => {
     try {
       // Delete on the server
-      const res = await fetch(`${API_URL}/deleteLog/${id}`, { 
+      const res = await fetch(`${API_URL}/calendar/timelogs/${id}`, {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
 
