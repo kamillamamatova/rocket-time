@@ -10,38 +10,6 @@ const requireAuth = (req, res, next) => {
   next();
 };
 
-// Legacy compatibility endpoint: GET /calendar/user/:userId
-router.get('/user/:userId', async (req, res, next) => {
-  try {
-    const userId = req.params.userId;
-    const { status, category, limit = '50', offset = '0' } = req.query;
-
-    let sql = 'SELECT * FROM goals WHERE user_id = ?';
-    const params = [userId];
-
-    if (status) {
-      sql += ' AND status = ?';
-      params.push(status);
-    }
-
-    if (category) {
-      sql += ' AND category = ?';
-      params.push(category);
-    }
-
-    const safeLimit = Number.parseInt(limit, 10) || 50;
-    const safeOffset = Number.parseInt(offset, 10) || 0;
-    sql += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-    params.push(safeLimit, safeOffset);
-
-    const goals = await query(sql, params);
-    res.json({ goals });
-  } catch (error) {
-    console.error('Get goals error:', error);
-    next(error);
-  }
-});
-
 // GET /calendar/goals - authenticated goals listing
 router.get('/goals', requireAuth, async (req, res, next) => {
   try {
