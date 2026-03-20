@@ -116,28 +116,32 @@ router.get('/callback', async (req, res) => {
       user = { id: userId, email: userInfo.email, first_name: userInfo.given_name, last_name: userInfo.family_name };
     }
 
-    // Store OAuth credentials encrypted at rest
-    const expiryDate =
-      typeof tokens.expiry_date === 'number' && Number.isFinite(tokens.expiry_date)
-        ? new Date(tokens.expiry_date)
-        : null;
+    // Store OAuth credentials encrypted at rest (non-fatal — only needed for AI Calendar)
+    try {
+      const expiryDate =
+        typeof tokens.expiry_date === 'number' && Number.isFinite(tokens.expiry_date)
+          ? new Date(tokens.expiry_date)
+          : null;
 
-    await query(
-      `INSERT INTO oauth_credentials (user_id, access_token, refresh_token, token_expiry, scope)
-       VALUES (?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE
-       access_token = VALUES(access_token),
-       refresh_token = VALUES(refresh_token),
-       token_expiry = VALUES(token_expiry),
-       scope = VALUES(scope)`,
-      [
-        String(user.id),
-        encryptToken(tokens.access_token),
-        encryptToken(tokens.refresh_token ?? null),
-        expiryDate,
-        tokens.scope ?? null
-      ]
-    );
+      await query(
+        `INSERT INTO oauth_credentials (user_id, access_token, refresh_token, token_expiry, scope)
+         VALUES (?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+         access_token = VALUES(access_token),
+         refresh_token = VALUES(refresh_token),
+         token_expiry = VALUES(token_expiry),
+         scope = VALUES(scope)`,
+        [
+          String(user.id),
+          encryptToken(tokens.access_token),
+          encryptToken(tokens.refresh_token ?? null),
+          expiryDate,
+          tokens.scope ?? null
+        ]
+      );
+    } catch (tokenErr) {
+      console.error('OAuth token storage failed (AI Calendar unavailable):', tokenErr.message);
+    }
 
     // Ensure session exists
     if (!req.session) {
