@@ -72,6 +72,11 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
     setMessages((prev) => [...prev, loadingMessage]);
 
     try {
+      // Build history from current messages (exclude loading placeholder)
+      const history = messages
+        .filter(m => m.id !== "loading" && (m.role === "user" || m.role === "assistant"))
+        .map(m => ({ role: m.role, content: m.content }));
+
       // Call backend API
       const response = await fetch(`${API_URL}/agent/chat`, {
         method: 'POST',
@@ -79,7 +84,7 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ message: userInput }),
+        body: JSON.stringify({ message: userInput, history }),
       });
 
       // Remove loading message

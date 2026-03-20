@@ -1,7 +1,7 @@
 //api/chat and chatbot entry
 import { Router } from 'express';
 import { query } from '../services/db.js';
-import { parseUserMessage } from '../services/aiService.js';
+import { parseUserMessage, getCoachResponse } from '../services/aiService.js';
 import { calendarForUser } from '../config/google.js';
 
 const router = Router();
@@ -182,75 +182,82 @@ function formatTimelogs(logs, max = 3) {
 
 /* ======================= Main chat endpoint ======================= */
 
-router.post('/chat', async (req, res, next) => {
+router.post('/chat', async (req, res) => {
   try {
     const userId = req.session.userId;
     if (!userId) {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    const { message } = req.body;
+    const { message, history = [] } = req.body;
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
     }
 
-    // Get user profile and goals
-    const users = await query('SELECT * FROM users WHERE id = ?', [userId]);
-    const user = users[0];
+    // Fetch user context
     const goals = await query('SELECT * FROM goals WHERE user_id = ?', [userId]);
-    const userProfile = { ...user, goals };
 
-    console.log('Parsing user message with AI...');
-    let parsedIntent;
-    try {
-      parsedIntent = await parseUserMessage(message, userProfile);
-      console.log('Parsed intent:', parsedIntent);
-    } catch (aiError) {
-      console.error('Gemini API error:', aiError?.message || aiError);
-      parsedIntent = { intent: 'SMALL_TALK' };
-    }
+    // Fast heuristic: if it clearly looks like an event, skip the classifier
+    const isObviousEvent = looksLikeEvent(message);
 
-    // If model says SMALL_TALK but text looks like an event, treat as CREATE_EVENT
-    if (parsedIntent?.intent === 'SMALL_TALK' && looksLikeEvent(message)) {
-      parsedIntent.intent = 'CREATE_EVENT';
-      parsedIntent.event = parsedIntent.event ?? {};
-    }
+    let parsedIntent = null;
 
-    let response = { intent: parsedIntent.intent, message: '' };
-
-    // Handle different intents
-    switch (parsedIntent.intent) {
-      case 'CREATE_EVENT':
-        response = await handleCreateEvent(parsedIntent, userId, message); // pass raw message
-        break;
-      case 'ADD_TASK':
-        response = await handleAddTask(parsedIntent, userId);
-        break;
-      case 'PLAN_WEEK':
-        response = await handlePlanWeek(parsedIntent, userId);
-        break;
-      case 'PRIORITIZE':
-        response = await handlePrioritize(parsedIntent, userId);
-        break;
-      case 'ASK_FEEDBACK':
-        response = await handleAskFeedback(parsedIntent, userId);
-        break;
-      case 'SMALL_TALK':
-      default: {
-        const goalCount = goals.length;
-        const activeGoals = goals.filter(g => g.status !== 'completed').length;
-        response = { 
-          intent: 'SMALL_TALK', 
-          message: `I'm here to help you manage your time and tasks! You have ${goalCount} goals, with ${activeGoals} currently active. How can I assist you today?` 
-        };
+    if (isObviousEvent) {
+      parsedIntent = { intent: 'CREATE_EVENT', event: {} };
+    } else {
+      // Run intent classifier to detect actionable requests
+      try {
+        parsedIntent = await parseUserMessage(message, { goals });
+        console.log('Parsed intent:', parsedIntent.intent);
+      } catch (aiError) {
+        console.error('Intent parser error:', aiError?.message || aiError);
+        parsedIntent = { intent: 'CONVERSATION' };
       }
     }
 
-    console.log('Sending response:', response);
-    res.json(response);
+    const intent = parsedIntent?.intent;
+
+    // ── Actionable intents ──────────────────────────────────────────────────
+    if (intent === 'CREATE_EVENT') {
+      const response = await handleCreateEvent(parsedIntent, userId, message);
+      return res.json(response);
+    }
+
+    if (intent === 'ADD_TASK') {
+      const response = await handleAddTask(parsedIntent, userId);
+      return res.json(response);
+    }
+
+    // ── Conversational coaching (everything else) ───────────────────────────
+    // Gather richer context for the coach
+    const recentLogs = await query(`
+      SELECT category, SUM(duration_hr) AS total_hours
+      FROM timelogs
+      WHERE user_id = ? AND date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      GROUP BY category
+    `, [userId]);
+
+    const wastedRow = await query(`
+      SELECT COALESCE(SUM(duration_hr), 0) AS wasted
+      FROM timelogs
+      WHERE user_id = ? AND category = 'wasted' AND date >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+    `, [userId]);
+
+    const wastedHours = wastedRow[0]?.wasted ?? 0;
+
+    const context = { goals, recentLogs, wastedHours };
+
+    let coachReply;
+    try {
+      coachReply = await getCoachResponse(message, context, history);
+    } catch (aiError) {
+      console.error('Coach error:', aiError?.message || aiError);
+      coachReply = "I'm having trouble connecting right now. Try again in a moment.";
+    }
+
+    return res.json({ intent: 'CONVERSATION', message: coachReply });
   } catch (error) {
     console.error('Chat error:', error);
-    console.error('Error stack:', error.stack);
     res.status(500).json({ error: error.message || 'Internal server error' });
   }
 });
