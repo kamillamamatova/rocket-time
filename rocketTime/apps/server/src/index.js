@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import session from 'cookie-session';
+import rateLimit from 'express-rate-limit';
 import 'dotenv/config';
 
 import auth from './routes/auth.js';
@@ -69,6 +70,24 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(globalLimiter);
+app.use('/auth', authLimiter);
+
 // app.use(session({ name: 'sid', secret: process.env.SESSION_SECRET || 'dev', httpOnly: true }));
 app.use(session({
   name: 'sid',
