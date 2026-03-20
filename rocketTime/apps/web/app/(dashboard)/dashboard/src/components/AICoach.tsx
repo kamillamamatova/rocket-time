@@ -201,13 +201,6 @@ export function AICoach({ wastedHours, goals, timeByCategory }: AICoachProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setInput("Analyze my investment portfolio")}
-          >
-            Portfolio Analysis
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
             onClick={() => setInput("Create an optimization strategy")}
           >
             Optimize
